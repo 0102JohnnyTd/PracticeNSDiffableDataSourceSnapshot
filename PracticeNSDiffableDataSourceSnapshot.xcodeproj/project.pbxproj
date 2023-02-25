@@ -60,8 +60,8 @@
 			children = (
 				1C7F3A4729A9F64600555C17 /* AppDelegate.swift */,
 				1C7F3A4929A9F64600555C17 /* SceneDelegate.swift */,
-				1C7F3A4B29A9F64600555C17 /* ViewController.swift */,
 				1C7F3A5B29A9FF3500555C17 /* Pokemon.swift */,
+				1C7F3A4B29A9F64600555C17 /* ViewController.swift */,
 				1C7F3A4D29A9F64600555C17 /* Main.storyboard */,
 				1C7F3A5029A9F64A00555C17 /* Assets.xcassets */,
 				1C7F3A5229A9F64A00555C17 /* LaunchScreen.storyboard */,

@@ -8,6 +8,8 @@
 import UIKit
 
 class ViewController: UIViewController {
+    @IBOutlet private weak var collectionView: UICollectionView!
+
     enum Section: Int, Hashable, CaseIterable, CustomStringConvertible {
         case recents, outline, list
 
@@ -34,7 +36,6 @@ class ViewController: UIViewController {
 
     var starredEmojis = Set<Item>()
 
-    var collectionView: UICollectionView!
     var dataSource: UICollectionViewDiffableDataSource<Section, Item>!
 
     override func viewDidLoad() {
@@ -54,11 +55,8 @@ extension ViewController {
     }
 
     func configureHierarchy() {
-        collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: createLayout())
-        collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        collectionView.backgroundColor = .systemGroupedBackground
+        collectionView.collectionViewLayout = createLayout()
         collectionView.delegate = self
-        view.addSubview(collectionView)
     }
 
     /// - Tag: CreateFullLayout
