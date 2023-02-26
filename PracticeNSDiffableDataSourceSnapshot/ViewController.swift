@@ -11,13 +11,12 @@ class ViewController: UIViewController {
     @IBOutlet private weak var collectionView: UICollectionView!
 
     enum Section: Int, Hashable, CaseIterable, CustomStringConvertible {
-        case recents, outline, list
+        case pokemonTypes, pokemonList
 
         var description: String {
             switch self {
-            case .recents: return "Recents"
-            case .outline: return "Outline"
-            case .list: return "List"
+            case .pokemonTypes: return "PokemonTypes"
+            case .pokemonList: return "PokemonList"
             }
         }
     }
@@ -57,6 +56,8 @@ extension ViewController {
     func configureHierarchy() {
         collectionView.collectionViewLayout = createLayout()
         collectionView.delegate = self
+        collectionView.register(PokemonTypeCell.nib, forCellWithReuseIdentifier: PokemonTypeCell.identifier)
+        collectionView.register(PokemonCell.nib, forCellWithReuseIdentifier: PokemonCell.identifier)
     }
 
     /// - Tag: CreateFullLayout
@@ -69,7 +70,7 @@ extension ViewController {
             let section: NSCollectionLayoutSection
 
             // orthogonal scrolling section of images
-            if sectionKind == .recents {
+            if sectionKind == .pokemonTypes {
 
                 let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
                 let item = NSCollectionLayoutItem(layoutSize: itemSize)
@@ -82,19 +83,19 @@ extension ViewController {
                 section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10)
 
             // outline
-            } else if sectionKind == .outline {
+            } else if sectionKind == .pokemonList {
                 section = NSCollectionLayoutSection.list(using: .init(appearance: .sidebar), layoutEnvironment: layoutEnvironment)
                 section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 10, bottom: 0, trailing: 10)
 
             // list
-            } else if sectionKind == .list {
-                var configuration = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
-                configuration.leadingSwipeActionsConfigurationProvider = { [weak self] (indexPath) in
-                    guard let self = self else { return nil }
-                    guard let item = self.dataSource.itemIdentifier(for: indexPath) else { return nil }
-                    return self.leadingSwipeActionConfigurationForListCellItem(item)
-                }
-                section = NSCollectionLayoutSection.list(using: configuration, layoutEnvironment: layoutEnvironment)
+//            } else if sectionKind == .list {
+//                var configuration = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
+//                configuration.leadingSwipeActionsConfigurationProvider = { [weak self] (indexPath) in
+//                    guard let self = self else { return nil }
+//                    guard let item = self.dataSource.itemIdentifier(for: indexPath) else { return nil }
+//                    return self.leadingSwipeActionConfigurationForListCellItem(item)
+//                }
+//                section = NSCollectionLayoutSection.list(using: configuration, layoutEnvironment: layoutEnvironment)
             } else {
                 fatalError("Unknown section!")
             }
@@ -166,76 +167,73 @@ extension ViewController {
         return UISwipeActionsConfiguration(actions: [starAction])
     }
 
-    func createGridCellRegistration() -> UICollectionView.CellRegistration<UICollectionViewCell, Emoji> {
-        return UICollectionView.CellRegistration<UICollectionViewCell, Emoji> { (cell, indexPath, emoji) in
-            var content = UIListContentConfiguration.cell()
-            content.text = emoji.text
-            content.textProperties.font = .boldSystemFont(ofSize: 38)
-            content.textProperties.alignment = .center
-            content.directionalLayoutMargins = .zero
-            cell.contentConfiguration = content
-            var background = UIBackgroundConfiguration.listPlainCell()
-            background.cornerRadius = 8
-            background.strokeColor = .systemGray3
-            background.strokeWidth = 1.0 / cell.traitCollection.displayScale
-            cell.backgroundConfiguration = background
-        }
-    }
+//    func createGridCellRegistration() -> UICollectionView.CellRegistration<UICollectionViewCell, Emoji> {
+//        return UICollectionView.CellRegistration<UICollectionViewCell, Emoji> { (cell, indexPath, emoji) in
+//            var content = UIListContentConfiguration.cell()
+//            content.text = emoji.text
+//            content.textProperties.font = .boldSystemFont(ofSize: 38)
+//            content.textProperties.alignment = .center
+//            content.directionalLayoutMargins = .zero
+//            cell.contentConfiguration = content
+//            var background = UIBackgroundConfiguration.listPlainCell()
+//            background.cornerRadius = 8
+//            background.strokeColor = .systemGray3
+//            background.strokeWidth = 1.0 / cell.traitCollection.displayScale
+//            cell.backgroundConfiguration = background
+//        }
+//    }
 
-    func createOutlineHeaderCellRegistration() -> UICollectionView.CellRegistration<UICollectionViewListCell, String> {
-        return UICollectionView.CellRegistration<UICollectionViewListCell, String> { (cell, indexPath, title) in
-            var content = cell.defaultContentConfiguration()
-            content.text = title
-            cell.contentConfiguration = content
-            cell.accessories = [.outlineDisclosure(options: .init(style: .header))]
-        }
-    }
+//    func createOutlineHeaderCellRegistration() -> UICollectionView.CellRegistration<UICollectionViewListCell, String> {
+//        return UICollectionView.CellRegistration<UICollectionViewListCell, String> { (cell, indexPath, title) in
+//            var content = cell.defaultContentConfiguration()
+//            content.text = title
+//            cell.contentConfiguration = content
+//            cell.accessories = [.outlineDisclosure(options: .init(style: .header))]
+//        }
+//    }
 
-    func createOutlineCellRegistration() -> UICollectionView.CellRegistration<UICollectionViewListCell, Emoji> {
-        return UICollectionView.CellRegistration<UICollectionViewListCell, Emoji> { (cell, indexPath, emoji) in
-            var content = cell.defaultContentConfiguration()
-            content.text = emoji.text
-            content.secondaryText = emoji.title
-            cell.contentConfiguration = content
-            cell.accessories = [.disclosureIndicator()]
-        }
-    }
+//    func createOutlineCellRegistration() -> UICollectionView.CellRegistration<UICollectionViewListCell, Emoji> {
+//        return UICollectionView.CellRegistration<UICollectionViewListCell, Emoji> { (cell, indexPath, emoji) in
+//            var content = cell.defaultContentConfiguration()
+//            content.text = emoji.text
+//            content.secondaryText = emoji.title
+//            cell.contentConfiguration = content
+//            cell.accessories = [.disclosureIndicator()]
+//        }
+//    }
 
     /// - Tag: ConfigureListCell
-    func createListCellRegistration() -> UICollectionView.CellRegistration<UICollectionViewListCell, Item> {
-        return UICollectionView.CellRegistration<UICollectionViewListCell, Item> { [weak self] (cell, indexPath, item) in
-            guard let self = self, let emoji = item.emoji else { return }
-            var content = UIListContentConfiguration.valueCell()
-            content.text = emoji.text
-            content.secondaryText = String(describing: emoji.category)
-            cell.contentConfiguration = content
-            cell.accessories = self.accessoriesForListCellItem(item)
-        }
-    }
+//    func createListCellRegistration() -> UICollectionView.CellRegistration<UICollectionViewListCell, Item> {
+//        return UICollectionView.CellRegistration<UICollectionViewListCell, Item> { [weak self] (cell, indexPath, item) in
+//            guard let self = self, let emoji = item.emoji else { return }
+//            var content = UIListContentConfiguration.valueCell()
+//            content.text = emoji.text
+//            content.secondaryText = String(describing: emoji.category)
+//            cell.contentConfiguration = content
+//            cell.accessories = self.accessoriesForListCellItem(item)
+//        }
+//    }
 
     /// - Tag: DequeueCells
     func configureDataSource() {
         // create registrations up front, then choose the appropriate one to use in the cell provider
-        let gridCellRegistration = createGridCellRegistration()
-        let listCellRegistration = createListCellRegistration()
-        let outlineHeaderCellRegistration = createOutlineHeaderCellRegistration()
-        let outlineCellRegistration = createOutlineCellRegistration()
+//        let gridCellRegistration = createGridCellRegistration()
+//        let listCellRegistration = createListCellRegistration()
+//        let outlineHeaderCellRegistration = createOutlineHeaderCellRegistration()
+//        let outlineCellRegistration = createOutlineCellRegistration()
 
         // data source
         dataSource = UICollectionViewDiffableDataSource<Section, Item>(collectionView: collectionView) {
             (collectionView, indexPath, item) -> UICollectionViewCell? in
             guard let section = Section(rawValue: indexPath.section) else { fatalError("Unknown section") }
             switch section {
-            case .recents:
-                return collectionView.dequeueConfiguredReusableCell(using: gridCellRegistration, for: indexPath, item: item.emoji)
-            case .list:
-                return collectionView.dequeueConfiguredReusableCell(using: listCellRegistration, for: indexPath, item: item)
-            case .outline:
-                if item.hasChildren {
-                    return collectionView.dequeueConfiguredReusableCell(using: outlineHeaderCellRegistration, for: indexPath, item: item.title!)
-                } else {
-                    return collectionView.dequeueConfiguredReusableCell(using: outlineCellRegistration, for: indexPath, item: item.emoji)
-                }
+            case .pokemonTypes:
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PokemonTypeCell.identifier, for: indexPath) as! PokemonTypeCell
+                return cell
+//                cell.configure(type: <#T##String#>)
+            case .pokemonList:
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PokemonCell.identifier, for: indexPath) as! PokemonCell
+                return cell
             }
         }
     }
@@ -252,15 +250,20 @@ extension ViewController {
 
         // recents (orthogonal scroller)
 
-        let recentItems = Emoji.Category.recents.emojis.map { Item(emoji: $0) }
-        var recentsSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
-        recentsSnapshot.append(recentItems)
-        dataSource.apply(recentsSnapshot, to: .recents, animatingDifferences: false)
+        // 🍏recentsSnapshotに追加するItem。ここにPokemonTypeを置き換えれば良い。
+        let pokemonTypeItems = Emoji.Category.recents.emojis.map { Item(emoji: $0) }
+        var pokemonTypeSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
+//        recentsSnapshot.append(recentItems)
+        pokemonTypeSnapshot.append(pokemonTypeItems)
+        // 🍎278行目あたりにも同じコードがある。なんで2回追加する必要があるのか？
+        dataSource.apply(pokemonTypeSnapshot, to: .pokemonTypes, animatingDifferences: false)
 
         // list of all + outlines
 
-        var allSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
-        var outlineSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
+        // 🍎Itemの型を例えばInt型とかに変えたらエラー起きる？apply先のDataSourceの型に従わないとコンパイルエラーが出ると予想。
+//        var allSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
+
+        var pokemonListSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
 
         for category in Emoji.Category.allCases where category != .recents {
             // append to the "all items" snapshot
@@ -268,23 +271,22 @@ extension ViewController {
             allSnapshot.append(allSnapshotItems)
 
             // setup our parent/child relations
-            let rootItem = Item(title: String(describing: category), hasChildren: true)
-            outlineSnapshot.append([rootItem])
-            let outlineItems = category.emojis.map { Item(emoji: $0) }
-            outlineSnapshot.append(outlineItems, to: rootItem)
+            let pokemonListItem = Item(title: String(describing: category), hasChildren: true)
+            pokemonListSnapshot.append(pokemonListItem)
+//            let outlineItems = category.emojis.map { Item(emoji: $0) }
+//            outlineSnapshot.append(outlineItems, to: rootItem)
         }
-
-        dataSource.apply(recentsSnapshot, to: .recents, animatingDifferences: false)
-        dataSource.apply(allSnapshot, to: .list, animatingDifferences: false)
-        dataSource.apply(outlineSnapshot, to: .outline, animatingDifferences: false)
+        dataSource.apply(pokemonTypeSnapshot, to: .pokemonTypes, animatingDifferences: false)
+        dataSource.apply(pokemonListSnapshot, to: .pokemonList, animatingDifferences: false)
+//        dataSource.apply(outlineSnapshot, to: .outline, animatingDifferences: false)
 
         // prepopulate starred emojis
 
-        for _ in 0..<5 {
-            if let item = allSnapshot.items.randomElement() {
-                self.starredEmojis.insert(item)
-            }
-        }
+//        for _ in 0..<5 {
+//            if let item = allSnapshot.items.randomElement() {
+//                self.starredEmojis.insert(item)
+//            }
+//        }
     }
 }
 
