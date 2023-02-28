@@ -22,18 +22,17 @@ class ViewController: UIViewController {
     }
 
     struct Item: Hashable {
-        let title: String?
-        let emoji: Emoji?
-        let hasChildren: Bool
-        init(emoji: Emoji? = nil, title: String? = nil, hasChildren: Bool = false) {
-            self.emoji = emoji
-            self.title = title
-            self.hasChildren = hasChildren
+        let pokemonType: String?
+        let pokemon: Pokemon?
+        init(pokemon: Pokemon? = nil, pokemonType: String? = nil) {
+            self.pokemon = pokemon
+            self.pokemonType = pokemonType
         }
         private let identifier = UUID()
     }
 
-    var starredEmojis = Set<Item>()
+    // ポケモンのタイプをまとめるSetを定義
+    var pokemonTypes = Set<Item>()
 
     var dataSource: UICollectionViewDiffableDataSource<Section, Item>!
 
@@ -124,7 +123,8 @@ extension ViewController {
     }
 
     func accessoriesForListCellItem(_ item: Item) -> [UICellAccessory] {
-        let isStarred = self.starredEmojis.contains(item)
+        // itemが何かわからん
+        let isStarred = self.pokemonTypes.contains(item)
         var accessories = [UICellAccessory.disclosureIndicator()]
         if isStarred {
             let star = UIImageView(image: UIImage(systemName: "star.fill"))
@@ -134,7 +134,7 @@ extension ViewController {
     }
 
     func leadingSwipeActionConfigurationForListCellItem(_ item: Item) -> UISwipeActionsConfiguration? {
-        let isStarred = self.starredEmojis.contains(item)
+        let isStarred = self.pokemonTypes.contains(item)
         let starAction = UIContextualAction(style: .normal, title: nil) {
             [weak self] (_, _, completion) in
             guard let self = self else {
@@ -145,9 +145,9 @@ extension ViewController {
             // Don't check again for the starred state. We promised in the UI what this action will do.
             // If the starred state has changed by now, we do nothing, as the set will not change.
             if isStarred {
-                self.starredEmojis.remove(item)
+                self.pokemonTypes.remove(item)
             } else {
-                self.starredEmojis.insert(item)
+                self.pokemonTypes.insert(item)
             }
 
             // Reconfigure the cell of this item
