@@ -31,18 +31,49 @@ class ViewController: UIViewController {
         private let identifier = UUID()
     }
 
-    // ポケモンのタイプをまとめるSetを定義
-    var pokemonTypes = Set<Item>()
+    private let api = API()
 
-    var dataSource: UICollectionViewDiffableDataSource<Section, Item>!
+    private var pokemons: [Item] = []
+    // ポケモンのタイプをまとめるSetを定義
+    private var pokemonTypes = Set<Item>()
+
+    private var dataSource: UICollectionViewDiffableDataSource<Section, Item>!
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        fetchData()
         configureNavItem()
         configureHierarchy()
         configureDataSource()
         applyInitialSnapshots()
+    }
+}
+
+extension ViewController {
+    private func showErrorAlertController() {
+        let alertController = UIAlertController(title: "エラー", message: "通信エラーが発生しました", preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alertController, animated: true)
+    }
+}
+
+
+extension ViewController {
+//    private func fetchData(completion: @escaping ([Item]?) -> Void) { もしかしたら必要かも。
+    private func fetchData() {
+        api.decodePokemonData(completion: { [weak self] result in
+            switch result {
+            case .success(let pokemonsData):
+                pokemonsData.forEach {
+                    self?.pokemons.append(Item(pokemon: $0))
+                }
+                self?.pokemons.forEach { item in
+                    item.pokemon?.types.forEach { self?.pokemonTypes.insert(Item(pokemonType: $0.type.name)) }
+                }
+            case .failure:
+                self?.showErrorAlertController()
+            }
+        })
     }
 }
 
@@ -251,7 +282,8 @@ extension ViewController {
         // recents (orthogonal scroller)
 
         // 🍏recentsSnapshotに追加するItem。ここにPokemonTypeを置き換えれば良い。
-        let pokemonTypeItems = Emoji.Category.recents.emojis.map { Item(emoji: $0) }
+//        let pokemonTypeItems = Emoji.Category.recents.emojis.map { Item(emoji: $0) }
+        let pokemonTypeItems = pokemonTypes.map { Item(pokemonType: $0.pokemonType) }
         var pokemonTypeSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
 //        recentsSnapshot.append(recentItems)
         pokemonTypeSnapshot.append(pokemonTypeItems)
