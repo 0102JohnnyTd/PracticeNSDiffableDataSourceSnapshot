@@ -13,7 +13,7 @@ class PokemonTypeCell: UICollectionViewCell {
     static let nib = UINib(nibName: String(describing: PokemonTypeCell.self), bundle: nil)
     static let identifier = String(describing: PokemonTypeCell.self)
 
-    func configure(type: String) {
+    func configure(type: String?) {
         typeLabel.text = type
     }
 }

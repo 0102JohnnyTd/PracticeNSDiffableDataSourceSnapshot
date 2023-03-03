@@ -33,8 +33,9 @@ class ViewController: UIViewController {
 
     private let api = API()
 
+    // パースしたデータを格納する配列
     private var pokemons: [Item] = []
-    // ポケモンのタイプをまとめるSetを定義
+    // ポケモンのタイプをまとめるSet
     private var pokemonTypes = Set<Item>()
 
     private var dataSource: UICollectionViewDiffableDataSource<Section, Item>!
@@ -67,9 +68,12 @@ extension ViewController {
                 pokemonsData.forEach {
                     self?.pokemons.append(Item(pokemon: $0))
                 }
+                print("pokemonsの中身:", self?.pokemons)
                 self?.pokemons.forEach { item in
                     item.pokemon?.types.forEach { self?.pokemonTypes.insert(Item(pokemonType: $0.type.name)) }
                 }
+                print("pokemonTypesの中身:", self?.pokemonTypes)
+                self?.configureDataSource()
             case .failure:
                 self?.showErrorAlertController()
             }
@@ -116,16 +120,6 @@ extension ViewController {
             } else if sectionKind == .pokemonList {
                 section = NSCollectionLayoutSection.list(using: .init(appearance: .sidebar), layoutEnvironment: layoutEnvironment)
                 section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 10, bottom: 0, trailing: 10)
-
-            // list
-//            } else if sectionKind == .list {
-//                var configuration = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
-//                configuration.leadingSwipeActionsConfigurationProvider = { [weak self] (indexPath) in
-//                    guard let self = self else { return nil }
-//                    guard let item = self.dataSource.itemIdentifier(for: indexPath) else { return nil }
-//                    return self.leadingSwipeActionConfigurationForListCellItem(item)
-//                }
-//                section = NSCollectionLayoutSection.list(using: configuration, layoutEnvironment: layoutEnvironment)
             } else {
                 fatalError("Unknown section!")
             }
@@ -198,138 +192,68 @@ extension ViewController {
         return UISwipeActionsConfiguration(actions: [starAction])
     }
 
-//    func createGridCellRegistration() -> UICollectionView.CellRegistration<UICollectionViewCell, Emoji> {
-//        return UICollectionView.CellRegistration<UICollectionViewCell, Emoji> { (cell, indexPath, emoji) in
-//            var content = UIListContentConfiguration.cell()
-//            content.text = emoji.text
-//            content.textProperties.font = .boldSystemFont(ofSize: 38)
-//            content.textProperties.alignment = .center
-//            content.directionalLayoutMargins = .zero
-//            cell.contentConfiguration = content
-//            var background = UIBackgroundConfiguration.listPlainCell()
-//            background.cornerRadius = 8
-//            background.strokeColor = .systemGray3
-//            background.strokeWidth = 1.0 / cell.traitCollection.displayScale
-//            cell.backgroundConfiguration = background
-//        }
-//    }
-
-//    func createOutlineHeaderCellRegistration() -> UICollectionView.CellRegistration<UICollectionViewListCell, String> {
-//        return UICollectionView.CellRegistration<UICollectionViewListCell, String> { (cell, indexPath, title) in
-//            var content = cell.defaultContentConfiguration()
-//            content.text = title
-//            cell.contentConfiguration = content
-//            cell.accessories = [.outlineDisclosure(options: .init(style: .header))]
-//        }
-//    }
-
-//    func createOutlineCellRegistration() -> UICollectionView.CellRegistration<UICollectionViewListCell, Emoji> {
-//        return UICollectionView.CellRegistration<UICollectionViewListCell, Emoji> { (cell, indexPath, emoji) in
-//            var content = cell.defaultContentConfiguration()
-//            content.text = emoji.text
-//            content.secondaryText = emoji.title
-//            cell.contentConfiguration = content
-//            cell.accessories = [.disclosureIndicator()]
-//        }
-//    }
-
-    /// - Tag: ConfigureListCell
-//    func createListCellRegistration() -> UICollectionView.CellRegistration<UICollectionViewListCell, Item> {
-//        return UICollectionView.CellRegistration<UICollectionViewListCell, Item> { [weak self] (cell, indexPath, item) in
-//            guard let self = self, let emoji = item.emoji else { return }
-//            var content = UIListContentConfiguration.valueCell()
-//            content.text = emoji.text
-//            content.secondaryText = String(describing: emoji.category)
-//            cell.contentConfiguration = content
-//            cell.accessories = self.accessoriesForListCellItem(item)
-//        }
-//    }
-
     /// - Tag: DequeueCells
     func configureDataSource() {
         // create registrations up front, then choose the appropriate one to use in the cell provider
-//        let gridCellRegistration = createGridCellRegistration()
-//        let listCellRegistration = createListCellRegistration()
-//        let outlineHeaderCellRegistration = createOutlineHeaderCellRegistration()
-//        let outlineCellRegistration = createOutlineCellRegistration()
-
         // data source
-        dataSource = UICollectionViewDiffableDataSource<Section, Item>(collectionView: collectionView) {
-            (collectionView, indexPath, item) -> UICollectionViewCell? in
+        dataSource = UICollectionViewDiffableDataSource<Section, Item>(collectionView: collectionView) { [weak self] (collectionView, indexPath, item) -> UICollectionViewCell? in
             guard let section = Section(rawValue: indexPath.section) else { fatalError("Unknown section") }
             switch section {
             case .pokemonTypes:
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PokemonTypeCell.identifier, for: indexPath) as! PokemonTypeCell
+                // 🍎Setの要素に順次アクセスする方法を調べる
+                self?.pokemonTypes.forEach {
+                    cell.configure(type: $0.pokemonType)
+                }
                 return cell
-//                cell.configure(type: <#T##String#>)
             case .pokemonList:
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PokemonCell.identifier, for: indexPath) as! PokemonCell
+                cell.configure(imageURL: self?.pokemons[indexPath.row].pokemon?.sprites.frontImage, name: self?.pokemons[indexPath.row].pokemon?.name)
                 return cell
             }
         }
+        applyInitialSnapshots()
     }
 
     /// - Tag: SectionSnapshot
     func applyInitialSnapshots() {
 
         // set the order for our sections
-
         let sections = Section.allCases
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
         snapshot.appendSections(sections)
         dataSource.apply(snapshot, animatingDifferences: false)
 
-        // recents (orthogonal scroller)
-
-        // 🍏recentsSnapshotに追加するItem。ここにPokemonTypeを置き換えれば良い。
-//        let pokemonTypeItems = Emoji.Category.recents.emojis.map { Item(emoji: $0) }
+        // pokemonTypes (orthogonal scroller)
         let pokemonTypeItems = pokemonTypes.map { Item(pokemonType: $0.pokemonType) }
         var pokemonTypeSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
-//        recentsSnapshot.append(recentItems)
         pokemonTypeSnapshot.append(pokemonTypeItems)
+        print("pokemonTypeSnapshot:", pokemonTypeSnapshot.items)
         // 🍎278行目あたりにも同じコードがある。なんで2回追加する必要があるのか？
         dataSource.apply(pokemonTypeSnapshot, to: .pokemonTypes, animatingDifferences: false)
 
-        // list of all + outlines
-
-        // 🍎Itemの型を例えばInt型とかに変えたらエラー起きる？apply先のDataSourceの型に従わないとコンパイルエラーが出ると予想。
-//        var allSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
-
+        // pokemonList
         var pokemonListSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
+        pokemonListSnapshot.append(pokemons)
+        print("pokemonListSnapshot:", pokemonListSnapshot.items)
+        dataSource.apply(pokemonListSnapshot, to: .pokemonList, animatingDifferences: false)
 
-        for category in Emoji.Category.allCases where category != .recents {
-            // append to the "all items" snapshot
-            let allSnapshotItems = category.emojis.map { Item(emoji: $0) }
-            allSnapshot.append(allSnapshotItems)
 
-            // setup our parent/child relations
-            let pokemonListItem = Item(title: String(describing: category), hasChildren: true)
-            pokemonListSnapshot.append(pokemonListItem)
-//            let outlineItems = category.emojis.map { Item(emoji: $0) }
-//            outlineSnapshot.append(outlineItems, to: rootItem)
-        }
+        print("apply後のpokemonTypeSnapshot:", pokemonTypeSnapshot.items)
+        print("apply後のpokemonListSnapshot:", pokemonListSnapshot.items)
         dataSource.apply(pokemonTypeSnapshot, to: .pokemonTypes, animatingDifferences: false)
         dataSource.apply(pokemonListSnapshot, to: .pokemonList, animatingDifferences: false)
-//        dataSource.apply(outlineSnapshot, to: .outline, animatingDifferences: false)
-
-        // prepopulate starred emojis
-
-//        for _ in 0..<5 {
-//            if let item = allSnapshot.items.randomElement() {
-//                self.starredEmojis.insert(item)
-//            }
-//        }
     }
 }
 
 extension ViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        // なんでself?
-        guard let emoji = self.dataSource.itemIdentifier(for: indexPath)?.emoji else {
-            collectionView.deselectItem(at: indexPath, animated: true)
-            return
-        }
-        let detailViewController = EmojiDetailViewController(with: emoji)
-        self.navigationController?.pushViewController(detailViewController, animated: true)
+//        // 各PokemonのDetailsViewControllerに遷移する
+//        guard let emoji = self.dataSource.itemIdentifier(for: indexPath)?.emoji else {
+//            collectionView.deselectItem(at: indexPath, animated: true)
+//            return
+//        }
+//        let detailViewController = EmojiDetailViewController(with: emoji)
+//        self.navigationController?.pushViewController(detailViewController, animated: true)
     }
 }
