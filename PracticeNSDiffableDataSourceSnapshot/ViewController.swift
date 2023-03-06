@@ -11,11 +11,11 @@ class ViewController: UIViewController {
     @IBOutlet private weak var collectionView: UICollectionView!
 
     enum Section: Int, Hashable, CaseIterable, CustomStringConvertible {
-        case pokemonTypes, pokemonList
+        case pokemonTypeList, pokemonList
 
         var description: String {
             switch self {
-            case .pokemonTypes: return "PokemonTypes"
+            case .pokemonTypeList: return "PokemonTypes"
             case .pokemonList: return "PokemonList"
             }
         }
@@ -36,7 +36,8 @@ class ViewController: UIViewController {
     // パースしたデータを格納する配列
     private var pokemons: [Item] = []
     // ポケモンのタイプをまとめるSet
-    private var pokemonTypes = Set<Item>()
+//    private var pokemonTypes = Set<Item>()
+    private var pokemonTypes = Set<String>()
 
     private var dataSource: UICollectionViewDiffableDataSource<Section, Item>!
 
@@ -68,12 +69,19 @@ extension ViewController {
                 pokemonsData.forEach {
                     self?.pokemons.append(Item(pokemon: $0))
                 }
+                // 図鑑順に並び替え
+                self?.pokemons.sort { $0.pokemon?.id ?? 0 < $1.pokemon?.id ?? 0 }
+
+//                pokemons.sort { $0.id < $1.id }
                 print("pokemonsの中身:", self?.pokemons)
                 self?.pokemons.forEach { item in
-                    item.pokemon?.types.forEach { self?.pokemonTypes.insert(Item(pokemonType: $0.type.name)) }
+                    item.pokemon?.types.forEach { self?.pokemonTypes.insert($0.type.name) }
                 }
-                print("pokemonTypesの中身:", self?.pokemonTypes)
-                self?.configureDataSource()
+                print("pokemonTypesの要素の数：", self?.pokemonTypes.count)
+//                print("pokemonTypesの中身:", self?.pokemonTypes)
+                DispatchQueue.main.async {
+                    self?.configureDataSource()
+                }
             case .failure:
                 self?.showErrorAlertController()
             }
@@ -104,8 +112,7 @@ extension ViewController {
             let section: NSCollectionLayoutSection
 
             // orthogonal scrolling section of images
-            if sectionKind == .pokemonTypes {
-
+            if sectionKind == .pokemonTypeList {
                 let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
                 let item = NSCollectionLayoutItem(layoutSize: itemSize)
                 item.contentInsets = NSDirectionalEdgeInsets(top: 5, leading: 5, bottom: 5, trailing: 5)
@@ -147,50 +154,50 @@ extension ViewController {
         }
     }
 
-    func accessoriesForListCellItem(_ item: Item) -> [UICellAccessory] {
-        // itemが何かわからん
-        let isStarred = self.pokemonTypes.contains(item)
-        var accessories = [UICellAccessory.disclosureIndicator()]
-        if isStarred {
-            let star = UIImageView(image: UIImage(systemName: "star.fill"))
-            accessories.append(.customView(configuration: .init(customView: star, placement: .trailing())))
-        }
-        return accessories
-    }
+//    func accessoriesForListCellItem(_ item: Item) -> [UICellAccessory] {
+//        // itemが何かわからん
+//        let isStarred = self.pokemonTypes.contains(item)
+//        var accessories = [UICellAccessory.disclosureIndicator()]
+//        if isStarred {
+//            let star = UIImageView(image: UIImage(systemName: "star.fill"))
+//            accessories.append(.customView(configuration: .init(customView: star, placement: .trailing())))
+//        }
+//        return accessories
+//    }
 
-    func leadingSwipeActionConfigurationForListCellItem(_ item: Item) -> UISwipeActionsConfiguration? {
-        let isStarred = self.pokemonTypes.contains(item)
-        let starAction = UIContextualAction(style: .normal, title: nil) {
-            [weak self] (_, _, completion) in
-            guard let self = self else {
-                completion(false)
-                return
-            }
-
-            // Don't check again for the starred state. We promised in the UI what this action will do.
-            // If the starred state has changed by now, we do nothing, as the set will not change.
-            if isStarred {
-                self.pokemonTypes.remove(item)
-            } else {
-                self.pokemonTypes.insert(item)
-            }
-
-            // Reconfigure the cell of this item
-            // Make sure we get the current index path of the item.
-            if let currentIndexPath = self.dataSource.indexPath(for: item) {
-                if let cell = self.collectionView.cellForItem(at: currentIndexPath) as? UICollectionViewListCell {
-                    UIView.animate(withDuration: 0.2) {
-                        cell.accessories = self.accessoriesForListCellItem(item)
-                    }
-                }
-            }
-
-            completion(true)
-        }
-        starAction.image = UIImage(systemName: isStarred ? "star.slash" : "star.fill")
-        starAction.backgroundColor = .systemBlue
-        return UISwipeActionsConfiguration(actions: [starAction])
-    }
+//    func leadingSwipeActionConfigurationForListCellItem(_ item: Item) -> UISwipeActionsConfiguration? {
+//        let isStarred = self.pokemonTypes.contains(item)
+//        let starAction = UIContextualAction(style: .normal, title: nil) {
+//            [weak self] (_, _, completion) in
+//            guard let self = self else {
+//                completion(false)
+//                return
+//            }
+//
+//            // Don't check again for the starred state. We promised in the UI what this action will do.
+//            // If the starred state has changed by now, we do nothing, as the set will not change.
+//            if isStarred {
+//                self.pokemonTypes.remove(item)
+//            } else {
+//                self.pokemonTypes.insert(item)
+//            }
+//
+//            // Reconfigure the cell of this item
+//            // Make sure we get the current index path of the item.
+//            if let currentIndexPath = self.dataSource.indexPath(for: item) {
+//                if let cell = self.collectionView.cellForItem(at: currentIndexPath) as? UICollectionViewListCell {
+//                    UIView.animate(withDuration: 0.2) {
+//                        cell.accessories = self.accessoriesForListCellItem(item)
+//                    }
+//                }
+//            }
+//
+//            completion(true)
+//        }
+//        starAction.image = UIImage(systemName: isStarred ? "star.slash" : "star.fill")
+//        starAction.backgroundColor = .systemBlue
+//        return UISwipeActionsConfiguration(actions: [starAction])
+//    }
 
     /// - Tag: DequeueCells
     func configureDataSource() {
@@ -199,11 +206,11 @@ extension ViewController {
         dataSource = UICollectionViewDiffableDataSource<Section, Item>(collectionView: collectionView) { [weak self] (collectionView, indexPath, item) -> UICollectionViewCell? in
             guard let section = Section(rawValue: indexPath.section) else { fatalError("Unknown section") }
             switch section {
-            case .pokemonTypes:
+            case .pokemonTypeList:
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PokemonTypeCell.identifier, for: indexPath) as! PokemonTypeCell
-                // 🍎Setの要素に順次アクセスする方法を調べる
+
                 self?.pokemonTypes.forEach {
-                    cell.configure(type: $0.pokemonType)
+                    cell.configure(type: $0)
                 }
                 return cell
             case .pokemonList:
@@ -225,12 +232,12 @@ extension ViewController {
         dataSource.apply(snapshot, animatingDifferences: false)
 
         // pokemonTypes (orthogonal scroller)
-        let pokemonTypeItems = pokemonTypes.map { Item(pokemonType: $0.pokemonType) }
+        let pokemonTypeItems = pokemonTypes.map { Item(pokemonType: $0) }
         var pokemonTypeSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
         pokemonTypeSnapshot.append(pokemonTypeItems)
         print("pokemonTypeSnapshot:", pokemonTypeSnapshot.items)
         // 🍎278行目あたりにも同じコードがある。なんで2回追加する必要があるのか？
-        dataSource.apply(pokemonTypeSnapshot, to: .pokemonTypes, animatingDifferences: false)
+        dataSource.apply(pokemonTypeSnapshot, to: .pokemonTypeList, animatingDifferences: false)
 
         // pokemonList
         var pokemonListSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
@@ -241,7 +248,7 @@ extension ViewController {
 
         print("apply後のpokemonTypeSnapshot:", pokemonTypeSnapshot.items)
         print("apply後のpokemonListSnapshot:", pokemonListSnapshot.items)
-        dataSource.apply(pokemonTypeSnapshot, to: .pokemonTypes, animatingDifferences: false)
+        dataSource.apply(pokemonTypeSnapshot, to: .pokemonTypeList, animatingDifferences: false)
         dataSource.apply(pokemonListSnapshot, to: .pokemonList, animatingDifferences: false)
     }
 }
