@@ -48,8 +48,6 @@ class ViewController: UIViewController {
         fetchData()
         configureNavItem()
         configureHierarchy()
-//        configureDataSource()
-//        applyInitialSnapshots()
     }
 }
 
@@ -74,13 +72,9 @@ extension ViewController {
                 // 図鑑順に並び替え
                 self?.pokemons.sort { $0.pokemon?.id ?? 0 < $1.pokemon?.id ?? 0 }
 
-//                pokemons.sort { $0.id < $1.id }
-//                print("pokemonsの中身:", self?.pokemons)
                 self?.pokemons.forEach { item in
                     item.pokemon?.types.forEach { self?.pokemonTypes.insert($0.type.name) }
                 }
-//                print("pokemonTypesの要素の数：", self?.pokemonTypes.count)
-//                print("pokemonTypesの中身:", self?.pokemonTypes)
                 DispatchQueue.main.async {
                     self?.configureDataSource()
                 }
@@ -106,7 +100,6 @@ extension ViewController {
 
     /// - Tag: CreateFullLayout
     func createLayout() -> UICollectionViewLayout {
-
         let sectionProvider = { [weak self] (sectionIndex: Int, layoutEnvironment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection? in
 
             guard let sectionKind = Section(rawValue: sectionIndex) else { return nil }
@@ -156,51 +149,6 @@ extension ViewController {
         }
     }
 
-//    func accessoriesForListCellItem(_ item: Item) -> [UICellAccessory] {
-//        // itemが何かわからん
-//        let isStarred = self.pokemonTypes.contains(item)
-//        var accessories = [UICellAccessory.disclosureIndicator()]
-//        if isStarred {
-//            let star = UIImageView(image: UIImage(systemName: "star.fill"))
-//            accessories.append(.customView(configuration: .init(customView: star, placement: .trailing())))
-//        }
-//        return accessories
-//    }
-
-//    func leadingSwipeActionConfigurationForListCellItem(_ item: Item) -> UISwipeActionsConfiguration? {
-//        let isStarred = self.pokemonTypes.contains(item)
-//        let starAction = UIContextualAction(style: .normal, title: nil) {
-//            [weak self] (_, _, completion) in
-//            guard let self = self else {
-//                completion(false)
-//                return
-//            }
-//
-//            // Don't check again for the starred state. We promised in the UI what this action will do.
-//            // If the starred state has changed by now, we do nothing, as the set will not change.
-//            if isStarred {
-//                self.pokemonTypes.remove(item)
-//            } else {
-//                self.pokemonTypes.insert(item)
-//            }
-//
-//            // Reconfigure the cell of this item
-//            // Make sure we get the current index path of the item.
-//            if let currentIndexPath = self.dataSource.indexPath(for: item) {
-//                if let cell = self.collectionView.cellForItem(at: currentIndexPath) as? UICollectionViewListCell {
-//                    UIView.animate(withDuration: 0.2) {
-//                        cell.accessories = self.accessoriesForListCellItem(item)
-//                    }
-//                }
-//            }
-//
-//            completion(true)
-//        }
-//        starAction.image = UIImage(systemName: isStarred ? "star.slash" : "star.fill")
-//        starAction.backgroundColor = .systemBlue
-//        return UISwipeActionsConfiguration(actions: [starAction])
-//    }
-
     /// - Tag: DequeueCells
     func configureDataSource() {
         // create registrations up front, then choose the appropriate one to use in the cell provider
@@ -210,22 +158,7 @@ extension ViewController {
             switch section {
             case .pokemonTypeList:
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PokemonTypeCell.identifier, for: indexPath) as! PokemonTypeCell
-
-                // snap
-//                var pokemonTypeItems = self?.pokemonTypes.map { Item(pokemonType: $0) }
-//                pokemonTypeItems.insert(Item(pokemonType: "all"), at: 0)
-
                 cell.configure(type: self?.pokemonTypeItems[indexPath.row].pokemonType)
-
-                // 1周目の最後はpoisonだった。
-                // 2周目の最後もpoisonだった。
-                // ちょくちょくforEachとconfigureが交互に呼ばれてて謎。
-
-//                self?.pokemonTypes.forEach {
-//                    print("アクセスされた要素:", $0)
-//                    cell.configure(type: $0)
-//                }
-                print("forEach終わり")
                 return cell
             case .pokemonList:
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PokemonCell.identifier, for: indexPath) as! PokemonCell
@@ -246,25 +179,18 @@ extension ViewController {
         dataSource.apply(snapshot, animatingDifferences: false)
 
         // pokemonTypes (orthogonal scroller)
-//        var pokemonTypeItems = pokemonTypes.map { Item(pokemonType: $0) }
         // 全タイプ対象のItemを追加
         pokemonTypeItems.insert(Item(pokemonType: "all"), at: 0)
-        print("pokemonTypeItems", pokemonTypeItems)
         var pokemonTypeSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
         pokemonTypeSnapshot.append(pokemonTypeItems)
-//        print("pokemonTypeSnapshot:", pokemonTypeSnapshot.items)
         // 🍎278行目あたりにも同じコードがある。なんで2回追加する必要があるのか？
         dataSource.apply(pokemonTypeSnapshot, to: .pokemonTypeList, animatingDifferences: false)
 
         // pokemonList
         var pokemonListSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
         pokemonListSnapshot.append(pokemons)
-//        print("pokemonListSnapshot:", pokemonListSnapshot.items)
         dataSource.apply(pokemonListSnapshot, to: .pokemonList, animatingDifferences: false)
 
-
-//        print("apply後のpokemonTypeSnapshot:", pokemonTypeSnapshot.items)
-//        print("apply後のpokemonListSnapshot:", pokemonListSnapshot.items)
         dataSource.apply(pokemonTypeSnapshot, to: .pokemonTypeList, animatingDifferences: false)
         dataSource.apply(pokemonListSnapshot, to: .pokemonList, animatingDifferences: false)
     }
