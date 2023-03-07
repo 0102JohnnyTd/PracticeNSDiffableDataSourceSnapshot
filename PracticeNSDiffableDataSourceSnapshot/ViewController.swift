@@ -36,9 +36,11 @@ class ViewController: UIViewController {
     // パースしたデータを格納する配列
     private var pokemons: [Item] = []
     // ポケモンのタイプをまとめるSet
-//    private var pokemonTypes = Set<Item>()
     private var pokemonTypes = Set<String>()
-
+    // CellのLabel&Snapshotに渡すデータの配列
+    // タイプ一覧のSetの要素をItemインスタンスの初期値に指定し、mapで配列にして返す
+    private lazy var pokemonTypeItems = pokemonTypes.map { Item(pokemonType: $0) }
+    // CollectionViewのデータを管理
     private var dataSource: UICollectionViewDiffableDataSource<Section, Item>!
 
     override func viewDidLoad() {
@@ -46,8 +48,8 @@ class ViewController: UIViewController {
         fetchData()
         configureNavItem()
         configureHierarchy()
-        configureDataSource()
-        applyInitialSnapshots()
+//        configureDataSource()
+//        applyInitialSnapshots()
     }
 }
 
@@ -73,11 +75,11 @@ extension ViewController {
                 self?.pokemons.sort { $0.pokemon?.id ?? 0 < $1.pokemon?.id ?? 0 }
 
 //                pokemons.sort { $0.id < $1.id }
-                print("pokemonsの中身:", self?.pokemons)
+//                print("pokemonsの中身:", self?.pokemons)
                 self?.pokemons.forEach { item in
                     item.pokemon?.types.forEach { self?.pokemonTypes.insert($0.type.name) }
                 }
-                print("pokemonTypesの要素の数：", self?.pokemonTypes.count)
+//                print("pokemonTypesの要素の数：", self?.pokemonTypes.count)
 //                print("pokemonTypesの中身:", self?.pokemonTypes)
                 DispatchQueue.main.async {
                     self?.configureDataSource()
@@ -209,9 +211,21 @@ extension ViewController {
             case .pokemonTypeList:
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PokemonTypeCell.identifier, for: indexPath) as! PokemonTypeCell
 
-                self?.pokemonTypes.forEach {
-                    cell.configure(type: $0)
-                }
+                // snap
+//                var pokemonTypeItems = self?.pokemonTypes.map { Item(pokemonType: $0) }
+//                pokemonTypeItems.insert(Item(pokemonType: "all"), at: 0)
+
+                cell.configure(type: self?.pokemonTypeItems[indexPath.row].pokemonType)
+
+                // 1周目の最後はpoisonだった。
+                // 2周目の最後もpoisonだった。
+                // ちょくちょくforEachとconfigureが交互に呼ばれてて謎。
+
+//                self?.pokemonTypes.forEach {
+//                    print("アクセスされた要素:", $0)
+//                    cell.configure(type: $0)
+//                }
+                print("forEach終わり")
                 return cell
             case .pokemonList:
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PokemonCell.identifier, for: indexPath) as! PokemonCell
@@ -232,22 +246,25 @@ extension ViewController {
         dataSource.apply(snapshot, animatingDifferences: false)
 
         // pokemonTypes (orthogonal scroller)
-        let pokemonTypeItems = pokemonTypes.map { Item(pokemonType: $0) }
+//        var pokemonTypeItems = pokemonTypes.map { Item(pokemonType: $0) }
+        // 全タイプ対象のItemを追加
+        pokemonTypeItems.insert(Item(pokemonType: "all"), at: 0)
+        print("pokemonTypeItems", pokemonTypeItems)
         var pokemonTypeSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
         pokemonTypeSnapshot.append(pokemonTypeItems)
-        print("pokemonTypeSnapshot:", pokemonTypeSnapshot.items)
+//        print("pokemonTypeSnapshot:", pokemonTypeSnapshot.items)
         // 🍎278行目あたりにも同じコードがある。なんで2回追加する必要があるのか？
         dataSource.apply(pokemonTypeSnapshot, to: .pokemonTypeList, animatingDifferences: false)
 
         // pokemonList
         var pokemonListSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
         pokemonListSnapshot.append(pokemons)
-        print("pokemonListSnapshot:", pokemonListSnapshot.items)
+//        print("pokemonListSnapshot:", pokemonListSnapshot.items)
         dataSource.apply(pokemonListSnapshot, to: .pokemonList, animatingDifferences: false)
 
 
-        print("apply後のpokemonTypeSnapshot:", pokemonTypeSnapshot.items)
-        print("apply後のpokemonListSnapshot:", pokemonListSnapshot.items)
+//        print("apply後のpokemonTypeSnapshot:", pokemonTypeSnapshot.items)
+//        print("apply後のpokemonListSnapshot:", pokemonListSnapshot.items)
         dataSource.apply(pokemonTypeSnapshot, to: .pokemonTypeList, animatingDifferences: false)
         dataSource.apply(pokemonListSnapshot, to: .pokemonList, animatingDifferences: false)
     }
