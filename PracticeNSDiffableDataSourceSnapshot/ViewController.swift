@@ -117,15 +117,33 @@ extension ViewController {
                 section.interGroupSpacing = 10
                 section.orthogonalScrollingBehavior = .continuousGroupLeadingBoundary
                 section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10)
-
             // outline
             } else if sectionKind == .pokemonList {
-                section = NSCollectionLayoutSection.list(using: .init(appearance: .sidebar), layoutEnvironment: layoutEnvironment)
-                section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 10, bottom: 0, trailing: 10)
+//                section = NSCollectionLayoutSection.list(using: .init(appearance: .sidebar), layoutEnvironment: layoutEnvironment)
+                // Itemのサイズを設定
+                let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
+                                                     heightDimension: .fractionalHeight(1.0))
+                // Itemを生成
+                let item = NSCollectionLayoutItem(layoutSize: itemSize)
+                // Itemの上下左右間隔を指定
+                item.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
+
+                let groupHeight = NSCollectionLayoutDimension.fractionalHeight(0.4)
+                // 列が1だった場合、CollectionViewの幅の20％の数値を返し、それ以外はCollectionViewの幅の値を返す
+                let groupWidth = NSCollectionLayoutDimension.fractionalWidth(1.0)
+                // Groupのサイズを設定
+                let groupSize = NSCollectionLayoutSize(widthDimension: groupWidth,
+                                                       heightDimension: groupHeight)
+                // Groupを生成
+                let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 2)
+
+                // Sectionを生成
+                section = NSCollectionLayoutSection(group: group)
+                // Sectionの上下左右間隔を指定
+                section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
             } else {
                 fatalError("Unknown section!")
             }
-
             return section
         }
         return UICollectionViewCompositionalLayout(sectionProvider: sectionProvider)
