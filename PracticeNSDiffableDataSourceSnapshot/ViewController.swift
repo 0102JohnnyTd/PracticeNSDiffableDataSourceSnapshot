@@ -9,6 +9,7 @@ import UIKit
 
 class ViewController: UIViewController {
     @IBOutlet private weak var collectionView: UICollectionView!
+    @IBOutlet private weak var indicator: UIActivityIndicatorView!
 
     enum Section: Int, Hashable, CaseIterable, CustomStringConvertible {
         case pokemonTypeList, pokemonList

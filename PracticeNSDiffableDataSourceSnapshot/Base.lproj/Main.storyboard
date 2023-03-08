@@ -27,6 +27,9 @@
                                 </collectionViewFlowLayout>
                                 <cells/>
                             </collectionView>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="fPS-8B-Z8z">
+                                <rect key="frame" x="186.66666666666666" y="416" width="20" height="20"/>
+                            </activityIndicatorView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -35,10 +38,13 @@
                             <constraint firstItem="2z7-6i-gwz" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="Efw-D5-gR9"/>
                             <constraint firstItem="2z7-6i-gwz" firstAttribute="bottom" secondItem="6Tk-OE-BBY" secondAttribute="bottom" id="W5G-E9-yU2"/>
                             <constraint firstItem="2z7-6i-gwz" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="Wdj-YS-Dwb"/>
+                            <constraint firstItem="fPS-8B-Z8z" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="apX-S8-QS2"/>
+                            <constraint firstItem="fPS-8B-Z8z" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="nMh-kf-16C"/>
                         </constraints>
                     </view>
                     <connections>
                         <outlet property="collectionView" destination="2z7-6i-gwz" id="FLr-nJ-3Qu"/>
+                        <outlet property="indicator" destination="fPS-8B-Z8z" id="rLC-zD-LMh"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
