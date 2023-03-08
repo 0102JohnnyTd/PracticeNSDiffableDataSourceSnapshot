@@ -46,9 +46,11 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        startIndicator()
         fetchData()
         configureNavItem()
         configureHierarchy()
+        configureDataSource()
     }
 }
 
@@ -77,7 +79,8 @@ extension ViewController {
                     item.pokemon?.types.forEach { self?.pokemonTypes.insert($0.type.name) }
                 }
                 DispatchQueue.main.async {
-                    self?.configureDataSource()
+                    self?.applyInitialSnapshots()
+                    self?.stopIndicator()
                 }
             case .failure:
                 self?.showErrorAlertController()
@@ -189,7 +192,7 @@ extension ViewController {
                 return cell
             }
         }
-        applyInitialSnapshots()
+//        applyInitialSnapshots()
     }
 
     /// - Tag: SectionSnapshot
@@ -210,7 +213,22 @@ extension ViewController {
         // pokemonList
         var pokemonListSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
         pokemonListSnapshot.append(pokemons)
-        dataSource.apply(pokemonListSnapshot, to: .pokemonList, animatingDifferences: false)
+        dataSource.apply(pokemonListSnapshot, to: .pokemonList, animatingDifferences: true)
+    }
+
+    // インジケータを起動させる
+    func startIndicator() {
+        view.alpha = 0.5
+        indicator.startAnimating()
+    }
+
+    // インジケータのアニメーションを停止させ、非表示にする
+    func stopIndicator() {
+        indicator.stopAnimating()
+        indicator.isHidden = true
+        view.alpha = 1.0
+        // DiffableDaraSorceを使用しているのでリロード処理は不要
+//        collectionView.reloadData()
     }
 }
 
