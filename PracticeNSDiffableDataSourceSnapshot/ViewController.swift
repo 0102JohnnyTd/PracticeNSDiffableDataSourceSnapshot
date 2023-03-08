@@ -80,6 +80,7 @@ extension ViewController {
                 }
                 DispatchQueue.main.async {
                     self?.applyInitialSnapshots()
+
                     self?.stopIndicator()
                 }
             case .failure:
@@ -104,14 +105,15 @@ extension ViewController {
 
     /// - Tag: CreateFullLayout
     func createLayout() -> UICollectionViewLayout {
-        let sectionProvider = { [weak self] (sectionIndex: Int, layoutEnvironment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection? in
+        let sectionProvider = { (sectionIndex: Int, layoutEnvironment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection? in
 
             guard let sectionKind = Section(rawValue: sectionIndex) else { return nil }
 
             let section: NSCollectionLayoutSection
 
             // orthogonal scrolling section of images
-            if sectionKind == .pokemonTypeList {
+            switch sectionKind {
+            case .pokemonTypeList:
                 let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
                 let item = NSCollectionLayoutItem(layoutSize: itemSize)
                 item.contentInsets = NSDirectionalEdgeInsets(top: 5, leading: 5, bottom: 5, trailing: 5)
@@ -121,9 +123,7 @@ extension ViewController {
                 section.interGroupSpacing = 10
                 section.orthogonalScrollingBehavior = .continuousGroupLeadingBoundary
                 section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10)
-            // outline
-            } else if sectionKind == .pokemonList {
-//                section = NSCollectionLayoutSection.list(using: .init(appearance: .sidebar), layoutEnvironment: layoutEnvironment)
+            case .pokemonList:
                 // Itemのサイズを設定
                 let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
                                                      heightDimension: .fractionalHeight(1.0))
@@ -133,24 +133,18 @@ extension ViewController {
                 item.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
 
                 let groupHeight = NSCollectionLayoutDimension.fractionalHeight(0.4)
-                // 列が1だった場合、CollectionViewの幅の20％の数値を返し、それ以外はCollectionViewの幅の値を返す
-                let groupWidth = NSCollectionLayoutDimension.fractionalWidth(1.0)
+                // CollectionViewのWidthの50%を指定
+                let groupWidth = NSCollectionLayoutDimension.fractionalWidth(0.5)
                 // Groupのサイズを設定
                 let groupSize = NSCollectionLayoutSize(widthDimension: groupWidth,
                                                        heightDimension: groupHeight)
                 // Groupを生成
-                // 🍎こっちは期待するLayoutが描画されるけどiOS16以降非推奨というアラートが表示される
-                let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 2)
-
-                // 🍎こっちは非推奨のアラートは消えるけど、期待と異なるLayoutが描画されてしまう
-//                let newGroup = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, repeatingSubitem: item, count: 2)
+                let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, repeatingSubitem: item, count: 2)
 
                 // Sectionを生成
                 section = NSCollectionLayoutSection(group: group)
                 // Sectionの上下左右間隔を指定
                 section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
-            } else {
-                fatalError("Unknown section!")
             }
             return section
         }
@@ -234,6 +228,19 @@ extension ViewController {
 
 extension ViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+
+        guard let sectionKind = Section(rawValue: indexPath.section) else { return }
+
+        switch sectionKind {
+        case .pokemonTypeList:
+            print("タップされた")
+            guard let pokemonTypeCell = dataSource.itemIdentifier(for: indexPath) else { return }
+            print("PokemonType:", pokemonTypeCell)
+        case .pokemonList:
+            print("タップされた")
+            guard let pokemonCell = dataSource.itemIdentifier(for: indexPath) else { return }
+            print("PokemonName:", pokemonCell)
+        }
 //        // 各PokemonのDetailsViewControllerに遷移する
 //        guard let emoji = self.dataSource.itemIdentifier(for: indexPath)?.emoji else {
 //            collectionView.deselectItem(at: indexPath, animated: true)
