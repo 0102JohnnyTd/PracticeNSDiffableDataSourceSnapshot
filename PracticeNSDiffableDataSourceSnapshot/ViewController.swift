@@ -135,7 +135,11 @@ extension ViewController {
                 let groupSize = NSCollectionLayoutSize(widthDimension: groupWidth,
                                                        heightDimension: groupHeight)
                 // Groupを生成
+                // 🍎こっちは期待するLayoutが描画されるけどiOS16以降非推奨というアラートが表示される
                 let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 2)
+
+                // 🍎こっちは非推奨のアラートは消えるけど、期待と異なるLayoutが描画されてしまう
+//                let newGroup = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, repeatingSubitem: item, count: 2)
 
                 // Sectionを生成
                 section = NSCollectionLayoutSection(group: group)
@@ -189,7 +193,6 @@ extension ViewController {
 
     /// - Tag: SectionSnapshot
     func applyInitialSnapshots() {
-
         // set the order for our sections
         let sections = Section.allCases
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
@@ -201,15 +204,11 @@ extension ViewController {
         pokemonTypeItems.insert(Item(pokemonType: "all"), at: 0)
         var pokemonTypeSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
         pokemonTypeSnapshot.append(pokemonTypeItems)
-        // 🍎278行目あたりにも同じコードがある。なんで2回追加する必要があるのか？
         dataSource.apply(pokemonTypeSnapshot, to: .pokemonTypeList, animatingDifferences: false)
 
         // pokemonList
         var pokemonListSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
         pokemonListSnapshot.append(pokemons)
-        dataSource.apply(pokemonListSnapshot, to: .pokemonList, animatingDifferences: false)
-
-        dataSource.apply(pokemonTypeSnapshot, to: .pokemonTypeList, animatingDifferences: false)
         dataSource.apply(pokemonListSnapshot, to: .pokemonList, animatingDifferences: false)
     }
 }
