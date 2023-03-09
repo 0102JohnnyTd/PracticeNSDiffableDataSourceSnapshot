@@ -125,7 +125,7 @@ extension ViewController {
                 section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10)
             case .pokemonList:
                 // Itemのサイズを設定
-                let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
+                let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.5),
                                                      heightDimension: .fractionalHeight(1.0))
                 // Itemを生成
                 let item = NSCollectionLayoutItem(layoutSize: itemSize)
@@ -134,7 +134,7 @@ extension ViewController {
 
                 let groupHeight = NSCollectionLayoutDimension.fractionalHeight(0.4)
                 // CollectionViewのWidthの50%を指定
-                let groupWidth = NSCollectionLayoutDimension.fractionalWidth(0.5)
+                let groupWidth = NSCollectionLayoutDimension.fractionalWidth(1)
                 // Groupのサイズを設定
                 let groupSize = NSCollectionLayoutSize(widthDimension: groupWidth,
                                                        heightDimension: groupHeight)
@@ -186,7 +186,6 @@ extension ViewController {
                 return cell
             }
         }
-//        applyInitialSnapshots()
     }
 
     /// - Tag: SectionSnapshot
@@ -234,12 +233,17 @@ extension ViewController: UICollectionViewDelegate {
         switch sectionKind {
         case .pokemonTypeList:
             print("タップされた")
-            guard let pokemonTypeCell = dataSource.itemIdentifier(for: indexPath) else { return }
-            print("PokemonType:", pokemonTypeCell)
+            guard let pokemonTypeListItem = dataSource.itemIdentifier(for: indexPath) else { return }
+            guard let pokemonType = pokemonTypeListItem.pokemonType else { return }
+            // やりたいことはタップしたタイプと一致するポケモンだけを取り出したい。
+//            let typeFilteredPokemons = pokemons.filter { $0.pokemon?.types.forEach {
+//                $0.type.name.contains(pokemonType)
+//            } }
+
         case .pokemonList:
             print("タップされた")
-            guard let pokemonCell = dataSource.itemIdentifier(for: indexPath) else { return }
-            print("PokemonName:", pokemonCell)
+            guard let pokemon = dataSource.itemIdentifier(for: indexPath) else { return }
+            print("PokemonName:", pokemon)
         }
 //        // 各PokemonのDetailsViewControllerに遷移する
 //        guard let emoji = self.dataSource.itemIdentifier(for: indexPath)?.emoji else {
