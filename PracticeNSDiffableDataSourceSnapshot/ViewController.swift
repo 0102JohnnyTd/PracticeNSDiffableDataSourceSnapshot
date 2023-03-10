@@ -36,6 +36,8 @@ class ViewController: UIViewController {
 
     // パースしたデータを格納する配列
     private var pokemons: [Item] = []
+    
+    private var subPokemons: [Item] = []
     // ポケモンのタイプをまとめるSet
     private var pokemonTypes = Set<String>()
     // CellのLabel&Snapshotに渡すデータの配列
@@ -74,13 +76,13 @@ extension ViewController {
                 }
                 // 図鑑順に並び替え
                 self?.pokemons.sort { $0.pokemon?.id ?? 0 < $1.pokemon?.id ?? 0 }
+                self?.subPokemons.append(contentsOf: self!.pokemons)
 
                 self?.pokemons.forEach { item in
                     item.pokemon?.types.forEach { self?.pokemonTypes.insert($0.type.name) }
                 }
                 DispatchQueue.main.async {
                     self?.applyInitialSnapshots()
-
                     self?.stopIndicator()
                 }
             case .failure:
@@ -171,7 +173,6 @@ extension ViewController {
 
     /// - Tag: DequeueCells
     func configureDataSource() {
-        // create registrations up front, then choose the appropriate one to use in the cell provider
         // data source
         dataSource = UICollectionViewDiffableDataSource<Section, Item>(collectionView: collectionView) { [weak self] (collectionView, indexPath, item) -> UICollectionViewCell? in
             guard let section = Section(rawValue: indexPath.section) else { fatalError("Unknown section") }
@@ -232,25 +233,42 @@ extension ViewController: UICollectionViewDelegate {
 
         switch sectionKind {
         case .pokemonTypeList:
+            // タイプ別のセルをタップ時に実行される処理
             print("タップされた")
+            // データソースに渡す配列の他にもう一つデータを保存しておくためのスペアの配列を作成
+            // タイプのCellをタップした直後にフィルタリングされた配列にスペアのデータを渡して元の状態にリセットする
+            pokemons = subPokemons
             guard let pokemonTypeListItem = dataSource.itemIdentifier(for: indexPath) else { return }
             guard let pokemonType = pokemonTypeListItem.pokemonType else { return }
-            // やりたいことはタップしたタイプと一致するポケモンだけを取り出したい。
-//            let typeFilteredPokemons = pokemons.filter { $0.pokemon?.types.forEach {
-//                $0.type.name.contains(pokemonType)
-//            } }
+
+            // データがタップしたタイプのポケモンのみに絞られる
+//            let filteredPokemons = pokemons.filter {
+//                $0.pokemon!.types.contains { $0.type.name.contains(pokemonType) }
+//            }
+            // 元の配列にフィルタリング結果を直接代入する。
+            pokemons = pokemons.filter {
+                $0.pokemon!.types.contains { $0.type.name.contains(pokemonType) }
+            }
+//            print("filteredPokemons:", filteredPokemons)
+//            print("filteredPokemonsのポケモンの数:", filteredPokemons.count)
+            print("pokemons:", pokemons)
+
+            var snapshot = NSDiffableDataSourceSectionSnapshot<Item>()
+//            snapshot.append(filteredPokemons)
+            snapshot.append(pokemons)
+            dataSource.apply(snapshot, to: .pokemonList, animatingDifferences: true)
 
         case .pokemonList:
             print("タップされた")
             guard let pokemon = dataSource.itemIdentifier(for: indexPath) else { return }
             print("PokemonName:", pokemon)
+            //        // 各PokemonのDetailsViewControllerに遷移する
+            //        guard let emoji = self.dataSource.itemIdentifier(for: indexPath)?.emoji else {
+            //            collectionView.deselectItem(at: indexPath, animated: true)
+            //            return
+            //        }
+            //        let detailViewController = EmojiDetailViewController(with: emoji)
+            //        self.navigationController?.pushViewController(detailViewController, animated: true)
         }
-//        // 各PokemonのDetailsViewControllerに遷移する
-//        guard let emoji = self.dataSource.itemIdentifier(for: indexPath)?.emoji else {
-//            collectionView.deselectItem(at: indexPath, animated: true)
-//            return
-//        }
-//        let detailViewController = EmojiDetailViewController(with: emoji)
-//        self.navigationController?.pushViewController(detailViewController, animated: true)
     }
 }

@@ -59,7 +59,7 @@ final class API {
 
     // ポケモン151匹分のリクエストURLを取得
     private func getURLs() -> [URL?] {
-        let pokeDexRange = 1...493
+        let pokeDexRange = 1...151
         let urls = pokeDexRange.map { URL(string: "https://pokeapi.co/api/v2/pokemon/\($0)/") }
 
         return urls
