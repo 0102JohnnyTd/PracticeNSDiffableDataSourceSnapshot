@@ -36,7 +36,7 @@ class ViewController: UIViewController {
 
     // パースしたデータを格納する配列
     private var pokemons: [Item] = []
-    
+
     private var subPokemons: [Item] = []
     // ポケモンのタイプをまとめるSet
     private var pokemonTypes = Set<String>()
@@ -179,6 +179,7 @@ extension ViewController {
             switch section {
             case .pokemonTypeList:
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PokemonTypeCell.identifier, for: indexPath) as! PokemonTypeCell
+                cell.layer.cornerRadius = 15
                 cell.configure(type: self?.pokemonTypeItems[indexPath.row].pokemonType)
                 return cell
             case .pokemonList:
