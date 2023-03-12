@@ -7,7 +7,7 @@
 
 import UIKit
 
-class PokemonTypeCell: UICollectionViewCell {
+final class PokemonTypeCell: UICollectionViewCell {
     @IBOutlet private weak var typeLabel: UILabel!
 
     static let nib = UINib(nibName: String(describing: PokemonTypeCell.self), bundle: nil)
@@ -17,3 +17,6 @@ class PokemonTypeCell: UICollectionViewCell {
         typeLabel.text = type
     }
 }
+
+
+

@@ -173,17 +173,26 @@ extension ViewController {
 
     /// - Tag: DequeueCells
     func configureDataSource() {
+        // create registrations up front, then choose the appropriate one to use in the cell provider
+        let pokemonTypeCellRegistration = UICollectionView.CellRegistration<PokemonTypeCell, Item> { (cell, indexPath, type) in
+            // ⚠️XIBCellがインスタンス化が完了していない(nilである)為、このタイミングでCell上のオブジェクトにアクセスするとクラッシュする
+//            cell.configure(type: type.pokemonType)
+        }
         // data source
         dataSource = UICollectionViewDiffableDataSource<Section, Item>(collectionView: collectionView) { [weak self] (collectionView, indexPath, item) -> UICollectionViewCell? in
             guard let section = Section(rawValue: indexPath.section) else { fatalError("Unknown section") }
             switch section {
             case .pokemonTypeList:
-                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PokemonTypeCell.identifier, for: indexPath) as! PokemonTypeCell
-                cell.layer.cornerRadius = 15
-                cell.configure(type: self?.pokemonTypeItems[indexPath.row].pokemonType)
+                let cell = collectionView.dequeueConfiguredReusableCell(using: pokemonTypeCellRegistration,for: indexPath,item: item)
+                // 😇😇😇😇構成された後の再利用可能Cellをキューから取得している(という理解な)のだが、こちらもクラッシュする...
+                cell.configure(type: item.pokemonType)
+//                cell.layer.cornerRadius = 15
+//                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PokemonTypeCell.identifier, for: indexPath) as! PokemonTypeCell
+//                cell.configure(type: self?.pokemonTypeItems[indexPath.row].pokemonType)
                 return cell
             case .pokemonList:
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PokemonCell.identifier, for: indexPath) as! PokemonCell
+                // 🍏こちらはクラッシュしない！！
                 cell.configure(imageURL: self?.pokemons[indexPath.row].pokemon?.sprites.frontImage, name: self?.pokemons[indexPath.row].pokemon?.name)
                 return cell
             }
