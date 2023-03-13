@@ -11,12 +11,10 @@ final class PokemonTypeCell: UICollectionViewCell {
     @IBOutlet private weak var typeLabel: UILabel!
 
     static let nib = UINib(nibName: String(describing: PokemonTypeCell.self), bundle: nil)
-    static let identifier = String(describing: PokemonTypeCell.self)
+    // CellRegistrationを使用してCellの登録を実装した場合は不要
+//    static let identifier = String(describing: PokemonTypeCell.self)
 
     func configure(type: String?) {
         typeLabel.text = type
     }
 }
-
-
-

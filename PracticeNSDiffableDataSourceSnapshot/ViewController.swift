@@ -33,7 +33,6 @@ class ViewController: UIViewController {
     }
 
     private let api = API()
-
     // パースしたデータを格納する配列
     private var pokemons: [Item] = []
 
@@ -101,8 +100,9 @@ extension ViewController {
     func configureHierarchy() {
         collectionView.collectionViewLayout = createLayout()
         collectionView.delegate = self
-        collectionView.register(PokemonTypeCell.nib, forCellWithReuseIdentifier: PokemonTypeCell.identifier)
-        collectionView.register(PokemonCell.nib, forCellWithReuseIdentifier: PokemonCell.identifier)
+        // CellRegistrationを使用してCellの登録を実装した場合は不要
+//        collectionView.register(PokemonTypeCell.nib, forCellWithReuseIdentifier: PokemonTypeCell.identifier)
+//        collectionView.register(PokemonCell.nib, forCellWithReuseIdentifier: PokemonCell.identifier)
     }
 
     /// - Tag: CreateFullLayout
@@ -152,7 +152,7 @@ extension ViewController {
         }
         return UICollectionViewCompositionalLayout(sectionProvider: sectionProvider)
     }
-
+    // create registrations up front, then choose the appropriate one to use in the cell provider
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
@@ -173,28 +173,45 @@ extension ViewController {
 
     /// - Tag: DequeueCells
     func configureDataSource() {
-        // create registrations up front, then choose the appropriate one to use in the cell provider
-        let pokemonTypeCellRegistration = UICollectionView.CellRegistration<PokemonTypeCell, Item> { (cell, indexPath, type) in
-            // ⚠️XIBCellがインスタンス化が完了していない(nilである)為、このタイミングでCell上のオブジェクトにアクセスするとクラッシュする
-//            cell.configure(type: type.pokemonType)
+        // pokemonTypeCellの登録
+        // 🍏UINibクラス型の引数『cellNib』にPokemonTypeCellクラスで定義したUINibクラス※1を指定
+           // ※1: static let nib = UINib(nibName: String(describing: PokemonTypeCell.self), bundle: nil)
+        let pokemonTypeCellRegistration = UICollectionView.CellRegistration<PokemonTypeCell, Item>(cellNib: PokemonTypeCell.nib) { (cell, indexPath, item) in
+            // Cellの構築処理
+            cell.layer.cornerRadius = 15
+            cell.configure(type: item.pokemonType)
         }
+
+        // pokemonCellの登録
+        let pokemonCellRegistration = UICollectionView.CellRegistration<PokemonCell, Item>(cellNib: PokemonCell.nib) { (cell, indexpath, item) in
+            // Cellの構築処理
+            cell.configure(imageURL: item.pokemon?.sprites.frontImage, name: item.pokemon?.name)
+        }
+
         // data source
-        dataSource = UICollectionViewDiffableDataSource<Section, Item>(collectionView: collectionView) { [weak self] (collectionView, indexPath, item) -> UICollectionViewCell? in
+        dataSource = UICollectionViewDiffableDataSource<Section, Item>(collectionView: collectionView) { (collectionView, indexPath, item) -> UICollectionViewCell? in
             guard let section = Section(rawValue: indexPath.section) else { fatalError("Unknown section") }
             switch section {
             case .pokemonTypeList:
-                let cell = collectionView.dequeueConfiguredReusableCell(using: pokemonTypeCellRegistration,for: indexPath,item: item)
-                // 😇😇😇😇構成された後の再利用可能Cellをキューから取得している(という理解な)のだが、こちらもクラッシュする...
-                cell.configure(type: item.pokemonType)
+                return collectionView.dequeueConfiguredReusableCell(using: pokemonTypeCellRegistration,
+                                                                    for: indexPath,
+                                                                    item: item
+                )
+                //
+//                cell.configure(type: item.pokemonType)
 //                cell.layer.cornerRadius = 15
 //                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PokemonTypeCell.identifier, for: indexPath) as! PokemonTypeCell
 //                cell.configure(type: self?.pokemonTypeItems[indexPath.row].pokemonType)
-                return cell
+//                return cell
             case .pokemonList:
-                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PokemonCell.identifier, for: indexPath) as! PokemonCell
-                // 🍏こちらはクラッシュしない！！
-                cell.configure(imageURL: self?.pokemons[indexPath.row].pokemon?.sprites.frontImage, name: self?.pokemons[indexPath.row].pokemon?.name)
-                return cell
+                return collectionView.dequeueConfiguredReusableCell(using: pokemonCellRegistration,
+                                                                    for: indexPath,
+                                                                    item: item
+                )
+//                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PokemonCell.identifier, for: indexPath) as! PokemonCell
+//                // 🍏こちらはクラッシュしない！！
+//                cell.configure(imageURL: self?.pokemons[indexPath.row].pokemon?.sprites.frontImage, name: self?.pokemons[indexPath.row].pokemon?.name)
+//                return cell
             }
         }
     }
@@ -247,27 +264,26 @@ extension ViewController: UICollectionViewDelegate {
             print("タップされた")
             // データソースに渡す配列の他にもう一つデータを保存しておくためのスペアの配列を作成
             // タイプのCellをタップした直後にフィルタリングされた配列にスペアのデータを渡して元の状態にリセットする
-            pokemons = subPokemons
+//            pokemons = subPokemons
             guard let pokemonTypeListItem = dataSource.itemIdentifier(for: indexPath) else { return }
             guard let pokemonType = pokemonTypeListItem.pokemonType else { return }
 
             // データがタップしたタイプのポケモンのみに絞られる
-//            let filteredPokemons = pokemons.filter {
-//                $0.pokemon!.types.contains { $0.type.name.contains(pokemonType) }
-//            }
-            // 元の配列にフィルタリング結果を直接代入する。
-            pokemons = pokemons.filter {
+            let filteredPokemons = pokemons.filter {
                 $0.pokemon!.types.contains { $0.type.name.contains(pokemonType) }
             }
+            // 元の配列にフィルタリング結果を直接代入する。
+//            pokemons = pokemons.filter {
+//                $0.pokemon!.types.contains { $0.type.name.contains(pokemonType) }
+//            }
 //            print("filteredPokemons:", filteredPokemons)
 //            print("filteredPokemonsのポケモンの数:", filteredPokemons.count)
-            print("pokemons:", pokemons)
+//            print("pokemons:", pokemons)
 
             var snapshot = NSDiffableDataSourceSectionSnapshot<Item>()
-//            snapshot.append(filteredPokemons)
-            snapshot.append(pokemons)
+            snapshot.append(filteredPokemons)
+//            snapshot.append(pokemons)
             dataSource.apply(snapshot, to: .pokemonList, animatingDifferences: true)
-
         case .pokemonList:
             print("タップされた")
             guard let pokemon = dataSource.itemIdentifier(for: indexPath) else { return }
