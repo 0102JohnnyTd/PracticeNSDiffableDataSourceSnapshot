@@ -100,9 +100,6 @@ extension ViewController {
     func configureHierarchy() {
         collectionView.collectionViewLayout = createLayout()
         collectionView.delegate = self
-        // CellRegistrationを使用してCellの登録を実装した場合は不要
-//        collectionView.register(PokemonTypeCell.nib, forCellWithReuseIdentifier: PokemonTypeCell.identifier)
-//        collectionView.register(PokemonCell.nib, forCellWithReuseIdentifier: PokemonCell.identifier)
     }
 
     /// - Tag: CreateFullLayout
@@ -197,21 +194,11 @@ extension ViewController {
                                                                     for: indexPath,
                                                                     item: item
                 )
-                //
-//                cell.configure(type: item.pokemonType)
-//                cell.layer.cornerRadius = 15
-//                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PokemonTypeCell.identifier, for: indexPath) as! PokemonTypeCell
-//                cell.configure(type: self?.pokemonTypeItems[indexPath.row].pokemonType)
-//                return cell
             case .pokemonList:
                 return collectionView.dequeueConfiguredReusableCell(using: pokemonCellRegistration,
                                                                     for: indexPath,
                                                                     item: item
                 )
-//                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PokemonCell.identifier, for: indexPath) as! PokemonCell
-//                // 🍏こちらはクラッシュしない！！
-//                cell.configure(imageURL: self?.pokemons[indexPath.row].pokemon?.sprites.frontImage, name: self?.pokemons[indexPath.row].pokemon?.name)
-//                return cell
             }
         }
     }
@@ -235,6 +222,12 @@ extension ViewController {
         var pokemonListSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
         pokemonListSnapshot.append(pokemons)
         dataSource.apply(pokemonListSnapshot, to: .pokemonList, animatingDifferences: true)
+    }
+
+    func applySnapshot(item: [Item], section: Section) {
+        var snapshot = NSDiffableDataSourceSectionSnapshot<Item>()
+        snapshot.append(item)
+        dataSource.apply(snapshot, to: section, animatingDifferences: true)
     }
 
     // インジケータを起動させる
@@ -261,7 +254,6 @@ extension ViewController: UICollectionViewDelegate {
         switch sectionKind {
         case .pokemonTypeList:
             // タイプ別のセルをタップ時に実行される処理
-            print("タップされた")
             // データソースに渡す配列の他にもう一つデータを保存しておくためのスペアの配列を作成
             // タイプのCellをタップした直後にフィルタリングされた配列にスペアのデータを渡して元の状態にリセットする
 //            pokemons = subPokemons
@@ -272,18 +264,8 @@ extension ViewController: UICollectionViewDelegate {
             let filteredPokemons = pokemons.filter {
                 $0.pokemon!.types.contains { $0.type.name.contains(pokemonType) }
             }
-            // 元の配列にフィルタリング結果を直接代入する。
-//            pokemons = pokemons.filter {
-//                $0.pokemon!.types.contains { $0.type.name.contains(pokemonType) }
-//            }
-//            print("filteredPokemons:", filteredPokemons)
-//            print("filteredPokemonsのポケモンの数:", filteredPokemons.count)
-//            print("pokemons:", pokemons)
-
-            var snapshot = NSDiffableDataSourceSectionSnapshot<Item>()
-            snapshot.append(filteredPokemons)
-//            snapshot.append(pokemons)
-            dataSource.apply(snapshot, to: .pokemonList, animatingDifferences: true)
+            // snapshotをdataSourceに適用
+            applySnapshot(item: filteredPokemons, section: .pokemonList)
         case .pokemonList:
             print("タップされた")
             guard let pokemon = dataSource.itemIdentifier(for: indexPath) else { return }

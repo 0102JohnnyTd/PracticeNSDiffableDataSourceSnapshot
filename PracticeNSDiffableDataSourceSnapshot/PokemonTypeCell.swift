@@ -12,7 +12,7 @@ final class PokemonTypeCell: UICollectionViewCell {
 
     static let nib = UINib(nibName: String(describing: PokemonTypeCell.self), bundle: nil)
     // CellRegistrationを使用してCellの登録を実装した場合は不要
-//    static let identifier = String(describing: PokemonTypeCell.self)
+    static let identifier = String(describing: PokemonTypeCell.self)
 
     func configure(type: String?) {
         typeLabel.text = type
