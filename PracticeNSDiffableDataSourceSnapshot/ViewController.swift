@@ -102,6 +102,13 @@ extension ViewController {
         collectionView.delegate = self
     }
 
+    func createSelectedBackGroundCellView(cell: UICollectionViewCell) -> UIView {
+        let selectedBGView = UIView(frame: cell.frame)
+        selectedBGView.layer.cornerRadius = 15
+        selectedBGView.backgroundColor = .systemBlue
+        return selectedBGView
+    }
+
     /// - Tag: CreateFullLayout
     func createLayout() -> UICollectionViewLayout {
         let sectionProvider = { (sectionIndex: Int, layoutEnvironment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection? in
@@ -173,8 +180,14 @@ extension ViewController {
         // pokemonTypeCellの登録
         // 🍏UINibクラス型の引数『cellNib』にPokemonTypeCellクラスで定義したUINibクラス※1を指定
            // ※1: static let nib = UINib(nibName: String(describing: PokemonTypeCell.self), bundle: nil)
-        let pokemonTypeCellRegistration = UICollectionView.CellRegistration<PokemonTypeCell, Item>(cellNib: PokemonTypeCell.nib) { (cell, indexPath, item) in
+        let pokemonTypeCellRegistration = UICollectionView.CellRegistration<PokemonTypeCell, Item>(cellNib: PokemonTypeCell.nib) { [weak self] (cell, indexPath, item) in
+
+            // 0番目(all)のCellをデフォルトで選択状態にする処理の実装
+//            if indexPath.row == 0 {
+//                cell.selectedBackgroundView = self?.createSelectedBackGroundCellView(cell: cell)
+//            }
             // Cellの構築処理
+            cell.selectedBackgroundView = self?.createSelectedBackGroundCellView(cell: cell)
             cell.layer.cornerRadius = 15
             cell.configure(type: item.pokemonType)
         }
@@ -202,7 +215,7 @@ extension ViewController {
             }
         }
     }
-
+//    cell.selectedBackgroundView = self?.createSelectedBackGroundCellView(cell: cell)
     /// - Tag: SectionSnapshot
     func applyInitialSnapshots() {
         // set the order for our sections

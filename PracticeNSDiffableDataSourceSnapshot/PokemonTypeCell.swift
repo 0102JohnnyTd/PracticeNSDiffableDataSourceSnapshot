@@ -14,6 +14,12 @@ final class PokemonTypeCell: UICollectionViewCell {
     // CellRegistrationを使用してCellの登録を実装した場合は不要
     static let identifier = String(describing: PokemonTypeCell.self)
 
+    override var isSelected: Bool {
+        didSet {
+            contentView.backgroundColor = isSelected ? .systemGray5 : .systemBackground
+        }
+    }
+
     func configure(type: String?) {
         typeLabel.text = type
     }
