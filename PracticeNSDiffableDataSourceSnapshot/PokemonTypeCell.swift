@@ -16,8 +16,14 @@ final class PokemonTypeCell: UICollectionViewCell {
 
     override var isSelected: Bool {
         didSet {
-            contentView.backgroundColor = isSelected ? .systemGray5 : .systemBackground
+            selectedBackgroundView?.layer.cornerRadius = 15
+            selectedBackgroundView?.backgroundColor = isSelected ? .systemBlue : .systemGray5
         }
+    }
+
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        selectedBackgroundView = UIView(frame: super.frame)
     }
 
     func configure(type: String?) {

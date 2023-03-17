@@ -75,7 +75,7 @@ extension ViewController {
                 }
                 // 図鑑順に並び替え
                 self?.pokemons.sort { $0.pokemon?.id ?? 0 < $1.pokemon?.id ?? 0 }
-                self?.subPokemons.append(contentsOf: self!.pokemons)
+//                self?.subPokemons.append(contentsOf: self!.pokemons)
 
                 self?.pokemons.forEach { item in
                     item.pokemon?.types.forEach { self?.pokemonTypes.insert($0.type.name) }
@@ -182,14 +182,22 @@ extension ViewController {
            // ※1: static let nib = UINib(nibName: String(describing: PokemonTypeCell.self), bundle: nil)
         let pokemonTypeCellRegistration = UICollectionView.CellRegistration<PokemonTypeCell, Item>(cellNib: PokemonTypeCell.nib) { [weak self] (cell, indexPath, item) in
 
-            // 0番目(all)のCellをデフォルトで選択状態にする処理の実装
-//            if indexPath.row == 0 {
-//                cell.selectedBackgroundView = self?.createSelectedBackGroundCellView(cell: cell)
-//            }
-            // Cellの構築処理
-            cell.selectedBackgroundView = self?.createSelectedBackGroundCellView(cell: cell)
             cell.layer.cornerRadius = 15
             cell.configure(type: item.pokemonType)
+
+            // アプリ起動直後に指定したCellを選択状態に設定
+            guard let collectionView = self?.collectionView else { fatalError("Unexpected Error") }
+            // セクション0,行0番目のIndexPathを取得
+            let selectedIndexPath = IndexPath(item: 0, section: 0)
+            // 指定したIndexPathのCellを選択
+            collectionView.selectItem(at: selectedIndexPath, animated: false, scrollPosition: [])
+            // 指定されたIndexPathに対応するCellを取得
+            if let cell = collectionView.cellForItem(at: selectedIndexPath) {
+                // didSelectItemAtメソッドを実行
+                collectionView.delegate?.collectionView?(collectionView, didSelectItemAt: selectedIndexPath)
+                // Bool値を変更
+                cell.isSelected = true
+            }
         }
 
         // pokemonCellの登録
@@ -229,6 +237,7 @@ extension ViewController {
         pokemonTypeItems.insert(Item(pokemonType: "all"), at: 0)
         var pokemonTypeSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
         pokemonTypeSnapshot.append(pokemonTypeItems)
+        print(pokemonTypeItems)
         dataSource.apply(pokemonTypeSnapshot, to: .pokemonTypeList, animatingDifferences: false)
 
         // pokemonList
