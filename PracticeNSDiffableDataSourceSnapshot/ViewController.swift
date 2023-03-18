@@ -65,7 +65,6 @@ extension ViewController {
 
 
 extension ViewController {
-//    private func fetchData(completion: @escaping ([Item]?) -> Void) { もしかしたら必要かも。
     private func fetchData() {
         api.decodePokemonData(completion: { [weak self] result in
             switch result {
@@ -75,7 +74,6 @@ extension ViewController {
                 }
                 // 図鑑順に並び替え
                 self?.pokemons.sort { $0.pokemon?.id ?? 0 < $1.pokemon?.id ?? 0 }
-//                self?.subPokemons.append(contentsOf: self!.pokemons)
 
                 self?.pokemons.forEach { item in
                     item.pokemon?.types.forEach { self?.pokemonTypes.insert($0.type.name) }
@@ -223,7 +221,7 @@ extension ViewController {
             }
         }
     }
-//    cell.selectedBackgroundView = self?.createSelectedBackGroundCellView(cell: cell)
+
     /// - Tag: SectionSnapshot
     func applyInitialSnapshots() {
         // set the order for our sections
@@ -276,9 +274,6 @@ extension ViewController: UICollectionViewDelegate {
         switch sectionKind {
         case .pokemonTypeList:
             // タイプ別のセルをタップ時に実行される処理
-            // データソースに渡す配列の他にもう一つデータを保存しておくためのスペアの配列を作成
-            // タイプのCellをタップした直後にフィルタリングされた配列にスペアのデータを渡して元の状態にリセットする
-//            pokemons = subPokemons
             guard let pokemonTypeListItem = dataSource.itemIdentifier(for: indexPath) else { return }
             guard let pokemonType = pokemonTypeListItem.pokemonType else { return }
 
