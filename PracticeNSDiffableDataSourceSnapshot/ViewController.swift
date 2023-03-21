@@ -60,6 +60,22 @@ class ViewController: UIViewController {
 }
 
 extension ViewController {
+    private func selectAllTypesCell() {
+        // アプリ起動直後に指定したCellを選択状態に設定
+        guard let collectionView = collectionView else { fatalError("Unexpected Error") }
+        // セクション0,行0番目のIndexPathを取得
+        let selectedIndexPath = IndexPath(item: 0, section: 0)
+        // 指定したIndexPathのCellを選択
+        collectionView.selectItem(at: selectedIndexPath, animated: false, scrollPosition: [])
+        // 指定されたIndexPathに対応するCellを取得
+        if let cell = collectionView.cellForItem(at: selectedIndexPath) {
+            // didSelectItemAtメソッドを実行
+            collectionView.delegate?.collectionView?(collectionView, didSelectItemAt: selectedIndexPath)
+            // Bool値を変更
+            cell.isSelected = true
+        }
+    }
+
     private func showErrorAlertController() {
         let alertController = UIAlertController(title: "エラー", message: "通信エラーが発生しました", preferredStyle: .alert)
         alertController.addAction(UIAlertAction(title: "OK", style: .default))
@@ -85,6 +101,7 @@ extension ViewController {
                 DispatchQueue.main.async {
                     self?.applyInitialSnapshots()
                     self?.stopIndicator()
+                    self?.selectAllTypesCell()
                 }
             case .failure:
                 self?.showErrorAlertController()
@@ -158,22 +175,21 @@ extension ViewController {
         }
         return UICollectionViewCompositionalLayout(sectionProvider: sectionProvider)
     }
-    // create registrations up front, then choose the appropriate one to use in the cell provider
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
 
-        if let indexPath = self.collectionView.indexPathsForSelectedItems?.first {
-            if let coordinator = self.transitionCoordinator {
-                coordinator.animate(alongsideTransition: { context in
-                    self.collectionView.deselectItem(at: indexPath, animated: true)
-                }) { (context) in
-                    if context.isCancelled {
-                        self.collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
-                    }
-                }
-            } else {
-                self.collectionView.deselectItem(at: indexPath, animated: animated)
-            }
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // アプリ起動直後に指定したCellを選択状態に設定
+        guard let collectionView = collectionView else { fatalError("Unexpected Error") }
+        // セクション0,行0番目のIndexPathを取得
+        let selectedIndexPath = IndexPath(item: 0, section: 0)
+        // 指定したIndexPathのCellを選択
+        collectionView.selectItem(at: selectedIndexPath, animated: false, scrollPosition: [])
+        // 指定されたIndexPathに対応するCellを取得
+        if let cell = collectionView.cellForItem(at: selectedIndexPath) { // 💡Indicatorが回ってるタイミングで呼び出される = データの取得及びCellの描画が完了していない
+            // didSelectItemAtメソッドを実行
+            collectionView.delegate?.collectionView?(collectionView, didSelectItemAt: selectedIndexPath)
+            // Bool値を変更
+            cell.isSelected = true // 💡 データの取得及びCellの描画が完了していない = こいつが呼び出されることはない = viewDidAppearでこの処理を書いてもViewに反映されない
         }
     }
 
@@ -181,25 +197,10 @@ extension ViewController {
     func configureDataSource() {
         // pokemonTypeCellの登録
         // 🍏UINibクラス型の引数『cellNib』にPokemonTypeCellクラスで定義したUINibクラス※1を指定
-           // ※1: static let nib = UINib(nibName: String(describing: PokemonTypeCell.self), bundle: nil)
-        let pokemonTypeCellRegistration = UICollectionView.CellRegistration<PokemonTypeCell, Item>(cellNib: PokemonTypeCell.nib) { [weak self] (cell, indexPath, item) in
-
+        // ※1: static let nib = UINib(nibName: String(describing: PokemonTypeCell.self), bundle: nil)
+        let pokemonTypeCellRegistration = UICollectionView.CellRegistration<PokemonTypeCell, Item>(cellNib: PokemonTypeCell.nib) { (cell, indexPath, item) in
             cell.layer.cornerRadius = 15
             cell.configure(type: item.pokemonType)
-
-            // アプリ起動直後に指定したCellを選択状態に設定
-            guard let collectionView = self?.collectionView else { fatalError("Unexpected Error") }
-            // セクション0,行0番目のIndexPathを取得
-            let selectedIndexPath = IndexPath(item: 0, section: 0)
-            // 指定したIndexPathのCellを選択
-            collectionView.selectItem(at: selectedIndexPath, animated: false, scrollPosition: [])
-            // 指定されたIndexPathに対応するCellを取得
-            if let cell = collectionView.cellForItem(at: selectedIndexPath) {
-                // didSelectItemAtメソッドを実行
-                collectionView.delegate?.collectionView?(collectionView, didSelectItemAt: selectedIndexPath)
-                // Bool値を変更
-                cell.isSelected = true
-            }
         }
 
         // pokemonCellの登録
@@ -239,7 +240,6 @@ extension ViewController {
         pokemonTypeItems.insert(Item(pokemonType: allTypes), at: 0)
         var pokemonTypeSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
         pokemonTypeSnapshot.append(pokemonTypeItems)
-        print(pokemonTypeItems)
         dataSource.apply(pokemonTypeSnapshot, to: .pokemonTypeList, animatingDifferences: false)
 
         // pokemonList
@@ -289,7 +289,7 @@ extension ViewController: UICollectionViewDelegate {
                 }
             }
             // snapshotをdataSourceに適用
-            applySnapshot(item: filteredPokemons, section: .pokemonList)
+            self.applySnapshot(item: filteredPokemons, section: .pokemonList)
         case .pokemonList:
             print("タップされた")
             guard let pokemon = dataSource.itemIdentifier(for: indexPath) else { return }

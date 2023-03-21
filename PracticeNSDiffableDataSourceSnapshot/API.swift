@@ -54,7 +54,6 @@ final class API {
             })
             task.resume()
         }
-
     }
 
     // ポケモン151匹分のリクエストURLを取得
