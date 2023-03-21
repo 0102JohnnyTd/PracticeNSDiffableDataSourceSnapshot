@@ -7,6 +7,16 @@
 
 import UIKit
 
+struct Item: Hashable {
+    let pokemonType: String?
+    let pokemon: Pokemon?
+    init(pokemon: Pokemon? = nil, pokemonType: String? = nil) {
+        self.pokemon = pokemon
+        self.pokemonType = pokemonType
+    }
+    private let identifier = UUID()
+}
+
 class ViewController: UIViewController {
     @IBOutlet private weak var collectionView: UICollectionView!
     @IBOutlet private weak var indicator: UIActivityIndicatorView!
@@ -22,21 +32,15 @@ class ViewController: UIViewController {
         }
     }
 
-    struct Item: Hashable {
-        let pokemonType: String?
-        let pokemon: Pokemon?
-        init(pokemon: Pokemon? = nil, pokemonType: String? = nil) {
-            self.pokemon = pokemon
-            self.pokemonType = pokemonType
-        }
-        private let identifier = UUID()
-    }
-
     private let api = API()
     // パースしたデータを格納する配列
     private var pokemons: [Item] = []
 
     private var subPokemons: [Item] = []
+
+    // タイプ一覧の最初に置き、全タイプのポケモンを表示させる
+    let allTypes = "all"
+
     // ポケモンのタイプをまとめるSet
     private var pokemonTypes = Set<String>()
     // CellのLabel&Snapshotに渡すデータの配列
@@ -232,7 +236,7 @@ extension ViewController {
 
         // pokemonTypes (orthogonal scroller)
         // 全タイプ対象のItemを追加
-        pokemonTypeItems.insert(Item(pokemonType: "all"), at: 0)
+        pokemonTypeItems.insert(Item(pokemonType: allTypes), at: 0)
         var pokemonTypeSnapshot = NSDiffableDataSourceSectionSnapshot<Item>()
         pokemonTypeSnapshot.append(pokemonTypeItems)
         print(pokemonTypeItems)
@@ -279,7 +283,10 @@ extension ViewController: UICollectionViewDelegate {
 
             // データがタップしたタイプのポケモンのみに絞られる
             let filteredPokemons = pokemons.filter {
-                $0.pokemon!.types.contains { $0.type.name.contains(pokemonType) }
+                $0.pokemon!.types.contains {
+                    if pokemonType == pokemonTypeItems[0].pokemonType { return true }
+                    return $0.type.name.contains(pokemonType)
+                }
             }
             // snapshotをdataSourceに適用
             applySnapshot(item: filteredPokemons, section: .pokemonList)
