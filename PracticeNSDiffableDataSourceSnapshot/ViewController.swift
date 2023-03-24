@@ -41,6 +41,9 @@ class ViewController: UIViewController {
     // タイプ一覧の最初に置き、全タイプのポケモンを表示させる
     let allTypes = "all"
 
+    // 変数増やすのいやだなぁ。
+    private var selectedIndexPath = IndexPath(item: 0, section: 0)
+
     // ポケモンのタイプをまとめるSet
     private var pokemonTypes = Set<String>()
     // CellのLabel&Snapshotに渡すデータの配列
@@ -64,7 +67,7 @@ extension ViewController {
         // アプリ起動直後に指定したCellを選択状態に設定
         guard let collectionView = collectionView else { fatalError("Unexpected Error") }
         // セクション0,行0番目のIndexPathを取得
-        let selectedIndexPath = IndexPath(item: 0, section: 0)
+//        let selectedIndexPath = IndexPath(item: 0, section: 0)
         // 指定したIndexPathのCellを選択
         collectionView.selectItem(at: selectedIndexPath, animated: false, scrollPosition: [])
         // 指定されたIndexPathに対応するCellを取得
@@ -101,7 +104,7 @@ extension ViewController {
                 DispatchQueue.main.async {
                     self?.applyInitialSnapshots()
                     self?.stopIndicator()
-                    self?.selectAllTypesCell()
+                    self?.selectAllTypesCell() // ⏪遷移先から遷移元の画面に戻ってもこいつは呼ばれなかった。
                 }
             case .failure:
                 self?.showErrorAlertController()
@@ -112,7 +115,7 @@ extension ViewController {
 
 extension ViewController {
     func configureNavItem() {
-        navigationItem.title = "Emoji Explorer"
+        navigationItem.title = "Pokemon List"
         navigationItem.largeTitleDisplayMode = .always
     }
 
@@ -181,7 +184,6 @@ extension ViewController {
         // アプリ起動直後に指定したCellを選択状態に設定
         guard let collectionView = collectionView else { fatalError("Unexpected Error") }
         // セクション0,行0番目のIndexPathを取得
-        let selectedIndexPath = IndexPath(item: 0, section: 0)
         // 指定したIndexPathのCellを選択
         collectionView.selectItem(at: selectedIndexPath, animated: false, scrollPosition: [])
         // 指定されたIndexPathに対応するCellを取得
@@ -278,6 +280,8 @@ extension ViewController: UICollectionViewDelegate {
         switch sectionKind {
         case .pokemonTypeList:
             // タイプ別のセルをタップ時に実行される処理
+            selectedIndexPath = indexPath
+
             guard let pokemonTypeListItem = dataSource.itemIdentifier(for: indexPath) else { return }
             guard let pokemonType = pokemonTypeListItem.pokemonType else { return }
 
@@ -292,8 +296,13 @@ extension ViewController: UICollectionViewDelegate {
             self.applySnapshot(item: filteredPokemons, section: .pokemonList)
         case .pokemonList:
             print("タップされた")
-            guard let pokemon = dataSource.itemIdentifier(for: indexPath) else { return }
-            print("PokemonName:", pokemon)
+            guard let item = dataSource.itemIdentifier(for: indexPath) else { return }
+            guard let pokemon = item.pokemon else { return }
+
+            let detailViewController = UIStoryboard(name: "PokemonDetail", bundle: nil).instantiateViewController(withIdentifier: "PokemonDetail") as! PokemonDetailViewController
+            detailViewController.pokemon = pokemon
+            navigationController?.pushViewController(detailViewController, animated: true)
+//            print("PokemonName:", pokemon)
             //        // 各PokemonのDetailsViewControllerに遷移する
             //        guard let emoji = self.dataSource.itemIdentifier(for: indexPath)?.emoji else {
             //            collectionView.deselectItem(at: indexPath, animated: true)

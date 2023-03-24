@@ -35,10 +35,10 @@ struct Image: Decodable, Hashable {
 
 // ポケモンのタイプ
 struct TypeEntry: Decodable, Hashable {
-  let type: Mode
+    let type: Mode
 }
 
 // "Type"が命名で利用できず、他に適切な表現が思い浮かばなかった。
 struct Mode: Decodable, Hashable {
-let name: String
+    let name: String
 }

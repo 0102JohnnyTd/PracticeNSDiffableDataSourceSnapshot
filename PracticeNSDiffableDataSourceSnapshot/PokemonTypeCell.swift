@@ -14,6 +14,7 @@ final class PokemonTypeCell: UICollectionViewCell {
     // CellRegistrationを使用してCellの登録を実装した場合は不要
     static let identifier = String(describing: PokemonTypeCell.self)
 
+    // isSelectedが画面遷移時に破棄されてる？
     override var isSelected: Bool {
         didSet {
             selectedBackgroundView?.layer.cornerRadius = 15
