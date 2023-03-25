@@ -104,7 +104,7 @@ extension ViewController {
                 DispatchQueue.main.async {
                     self?.applyInitialSnapshots()
                     self?.stopIndicator()
-                    self?.selectAllTypesCell() 
+                    self?.selectAllTypesCell()
                 }
             case .failure:
                 self?.showErrorAlertController()
@@ -299,7 +299,8 @@ extension ViewController: UICollectionViewDelegate {
             guard let item = dataSource.itemIdentifier(for: indexPath) else { return }
             guard let pokemon = item.pokemon else { return }
 
-            let detailViewController = UIStoryboard(name: "PokemonDetail", bundle: nil).instantiateViewController(withIdentifier: "PokemonDetail") as! PokemonDetailViewController
+            print("StoryboardName: \(PokemonDetailViewController.storyboardName)")
+            let detailViewController = UIStoryboard(name: PokemonDetailViewController.storyboardName, bundle: nil).instantiateViewController(withIdentifier: PokemonDetailViewController.idenfitifier) as! PokemonDetailViewController
             detailViewController.pokemon = pokemon
             navigationController?.pushViewController(detailViewController, animated: true)
 //            print("PokemonName:", pokemon)

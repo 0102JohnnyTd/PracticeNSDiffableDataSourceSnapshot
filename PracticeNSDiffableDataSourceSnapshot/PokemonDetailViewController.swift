@@ -14,14 +14,9 @@ class PokemonDetailViewController: UIViewController {
 
     var pokemon: Pokemon?
 
-//    init(pokemon: Pokemon) {
-//        self.pokemon = pokemon
-//        super.init(nibName: nil, bundle: nil)
-//    }
-//
-//    required init?(coder: NSCoder) {
-//        fatalError("init(coder:) has not been implemented")
-//    }
+    // インスタンス生成時のハードコーディング対策
+    static let storyboardName = "PokemonDetail"
+    static let idenfitifier = "PokemonDetail"
 
     override func viewDidLoad() {
         super.viewDidLoad()
