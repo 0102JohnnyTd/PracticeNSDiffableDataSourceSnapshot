@@ -104,7 +104,7 @@ extension ViewController {
                 DispatchQueue.main.async {
                     self?.applyInitialSnapshots()
                     self?.stopIndicator()
-                    self?.selectAllTypesCell() // ⏪遷移先から遷移元の画面に戻ってもこいつは呼ばれなかった。
+                    self?.selectAllTypesCell() 
                 }
             case .failure:
                 self?.showErrorAlertController()
